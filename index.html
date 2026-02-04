@@ -1,0 +1,1149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Code-Based Student Attendance System</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: '#1E88E5',
+              secondary: '#43A047',
+            },
+            borderRadius: {
+              button: '8px',
+            },
+            fontFamily: {
+              poppins: ['Poppins', 'sans-serif'],
+              pacifico: ['Pacifico', 'serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+      .hero-bg {
+        background-image: url('https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+      .page {
+        display: none;
+      }
+      .page.active {
+        display: block;
+      }
+      .qr-code-container {
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 text-gray-900">
+    <!-- Landing Page -->
+    <div id="landing-page" class="page active">
+      <div class="hero-bg min-h-screen flex items-center relative">
+        <div
+          class="absolute inset-0 bg-gradient-to-r from-white/95 via-white/90 to-transparent"
+        ></div>
+        <div class="relative w-full max-w-7xl mx-auto px-6 lg:px-8">
+          <div class="max-w-2xl">
+            <div class="mb-8">
+              <h1
+                class="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight"
+              >
+                QR Code-Based<br />
+                <span class="text-primary">Student Attendance</span><br />
+                System
+              </h1>
+              <p class="text-xl text-gray-700 mb-8 leading-relaxed">
+                Streamline attendance tracking with modern QR code technology.
+                Quick, accurate, and efficient attendance management for
+                educational institutions.
+              </p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 mb-12">
+              <button
+                onclick="showPage('lecturer-login')"
+                class="rounded-button whitespace-nowrap bg-primary text-white px-8 py-4 text-lg font-semibold hover:bg-blue-600 transition-colors flex items-center justify-center gap-3"
+              >
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-user-line text-xl"></i>
+                </div>
+                Lecturer Login
+              </button>
+              <button
+                onclick="showPage('student-attendance')"
+                class="rounded-button whitespace-nowrap bg-secondary text-white px-8 py-4 text-lg font-semibold hover:bg-green-600 transition-colors flex items-center justify-center gap-3"
+              >
+                <div class="w-6 h-6 flex items-center justify-center">
+                  <i class="ri-qr-scan-line text-xl"></i>
+                </div>
+                Student Attendance
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+              <div class="bg-white/80 backdrop-blur-sm p-6 rounded-lg">
+                <div
+                  class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <i class="ri-qr-code-line text-2xl text-primary"></i>
+                </div>
+                <h3 class="font-semibold mb-2">Quick Scanning</h3>
+                <p class="text-sm text-gray-600">
+                  Fast QR code generation and scanning
+                </p>
+              </div>
+              <div class="bg-white/80 backdrop-blur-sm p-6 rounded-lg">
+                <div
+                  class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <i class="ri-shield-check-line text-2xl text-secondary"></i>
+                </div>
+                <h3 class="font-semibold mb-2">Secure Tracking</h3>
+                <p class="text-sm text-gray-600">
+                  Reliable and accurate attendance records
+                </p>
+              </div>
+              <div class="bg-white/80 backdrop-blur-sm p-6 rounded-lg">
+                <div
+                  class="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <i class="ri-bar-chart-line text-2xl text-orange-500"></i>
+                </div>
+                <h3 class="font-semibold mb-2">Real-time Reports</h3>
+                <p class="text-sm text-gray-600">
+                  Instant attendance analytics and exports
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lecturer Login Page -->
+    <div id="lecturer-login" class="page">
+      <div class="min-h-screen flex items-center justify-center px-6">
+        <div class="w-full max-w-md">
+          <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="text-center mb-8">
+              <div
+                class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
+                <i class="ri-user-line text-3xl text-primary"></i>
+              </div>
+              <h2 class="text-2xl font-bold text-gray-900">Lecturer Login</h2>
+              <p class="text-gray-600 mt-2">Access your attendance dashboard</p>
+            </div>
+
+            <form id="login-form" class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Username</label
+                >
+                <div class="relative">
+                  <div
+                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                  >
+                    <div class="w-5 h-5 flex items-center justify-center">
+                      <i class="ri-user-line text-gray-400"></i>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    id="username"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                    placeholder="Enter your username"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Password</label
+                >
+                <div class="relative">
+                  <div
+                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                  >
+                    <div class="w-5 h-5 flex items-center justify-center">
+                      <i class="ri-lock-line text-gray-400"></i>
+                    </div>
+                  </div>
+                  <input
+                    type="password"
+                    id="password"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                    placeholder="Enter your password"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div
+                id="error-message"
+                class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"
+              ></div>
+
+              <button
+                type="submit"
+                class="rounded-button whitespace-nowrap w-full bg-primary text-white py-3 font-semibold hover:bg-blue-600 transition-colors"
+              >
+                Sign In
+              </button>
+            </form>
+
+            <div class="mt-6 text-center">
+              <button
+                onclick="showPage('landing-page')"
+                class="text-primary hover:text-blue-600 text-sm font-medium"
+              >
+                ← Back to Home
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lecturer Dashboard -->
+    <div id="lecturer-dashboard" class="page">
+      <div class="min-h-screen bg-gray-50">
+        <!-- Top Navigation -->
+        <nav class="bg-white shadow-sm border-b">
+          <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center"
+                >
+                  <i class="ri-qr-code-line text-white text-lg"></i>
+                </div>
+                <h1 class="text-xl font-semibold">Attendance System</h1>
+              </div>
+              <div class="flex items-center gap-4">
+                <span class="text-gray-700">Welcome, Dr. Sarah Johnson</span>
+                <button
+                  onclick="showPage('landing-page')"
+                  class="rounded-button whitespace-nowrap bg-gray-100 text-gray-700 px-4 py-2 text-sm hover:bg-gray-200 transition-colors flex items-center gap-2"
+                >
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-logout-line"></i>
+                  </div>
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+          <div class="mb-8">
+            <h2 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h2>
+            <p class="text-gray-600">
+              Manage your courses and track student attendance
+            </p>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <button
+              onclick="showPage('generate-qr')"
+              class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left group"
+            >
+              <div
+                class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors"
+              >
+                <i class="ri-qr-code-line text-2xl text-primary"></i>
+              </div>
+              <h3 class="text-lg font-semibold mb-2">Generate QR Code</h3>
+              <p class="text-gray-600 text-sm">
+                Create attendance session for your course
+              </p>
+            </button>
+
+            <button
+              onclick="showPage('view-attendance')"
+              class="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left group"
+            >
+              <div
+                class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors"
+              >
+                <i class="ri-file-list-line text-2xl text-secondary"></i>
+              </div>
+              <h3 class="text-lg font-semibold mb-2">View Attendance</h3>
+              <p class="text-gray-600 text-sm">
+                Monitor and export attendance records
+              </p>
+            </button>
+
+            <div class="bg-white p-6 rounded-xl shadow-sm">
+              <div
+                class="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center mb-4"
+              >
+                <i class="ri-bar-chart-line text-2xl text-orange-500"></i>
+              </div>
+              <h3 class="text-lg font-semibold mb-2">Reports</h3>
+              <p class="text-gray-600 text-sm">
+                Generate detailed analytics and reports
+              </p>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="bg-white rounded-xl shadow-sm p-6">
+            <h3 class="text-lg font-semibold mb-4">Recent Sessions</h3>
+            <div class="space-y-3">
+              <div
+                class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+              >
+                <div>
+                  <p class="font-medium">Computer Science 101</p>
+                  <p class="text-sm text-gray-600">
+                    Today, 10:00 AM - 32 students attended
+                  </p>
+                </div>
+                <span class="text-sm text-secondary font-medium">Active</span>
+              </div>
+              <div
+                class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+              >
+                <div>
+                  <p class="font-medium">Data Structures</p>
+                  <p class="text-sm text-gray-600">
+                    Yesterday, 2:00 PM - 28 students attended
+                  </p>
+                </div>
+                <span class="text-sm text-gray-500 font-medium">Completed</span>
+              </div>
+              <div
+                class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+              >
+                <div>
+                  <p class="font-medium">Software Engineering</p>
+                  <p class="text-sm text-gray-600">
+                    Jan 18, 9:00 AM - 35 students attended
+                  </p>
+                </div>
+                <span class="text-sm text-gray-500 font-medium">Completed</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Generate QR Code Page -->
+    <div id="generate-qr" class="page">
+      <div class="min-h-screen bg-gray-50">
+        <!-- Top Navigation -->
+        <nav class="bg-white shadow-sm border-b">
+          <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+              <div class="flex items-center gap-4">
+                <button
+                  onclick="showPage('lecturer-dashboard')"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <i class="ri-arrow-left-line text-xl"></i>
+                </button>
+                <h1 class="text-xl font-semibold">Generate QR Code</h1>
+              </div>
+              <button
+                onclick="showPage('landing-page')"
+                class="rounded-button whitespace-nowrap bg-gray-100 text-gray-700 px-4 py-2 text-sm hover:bg-gray-200 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        <div class="max-w-4xl mx-auto px-6 lg:px-8 py-8">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Course Selection -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+              <h2 class="text-xl font-semibold mb-6">
+                Create Attendance Session
+              </h2>
+
+              <div class="space-y-6">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2"
+                    >Select Course</label
+                  >
+                  <div class="relative">
+                    <button
+                      id="course-dropdown"
+                      class="w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-left flex items-center justify-between hover:border-gray-400 transition-colors"
+                    >
+                      <span id="selected-course">Choose a course...</span>
+                      <div class="w-5 h-5 flex items-center justify-center">
+                        <i class="ri-arrow-down-s-line text-gray-400"></i>
+                      </div>
+                    </button>
+                    <div
+                      id="course-options"
+                      class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10"
+                    >
+                      <div class="py-1">
+                        <button
+                          class="course-option w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors"
+                          data-course="Computer Science 101"
+                        >
+                          Computer Science 101
+                        </button>
+                        <button
+                          class="course-option w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors"
+                          data-course="Data Structures"
+                        >
+                          Data Structures
+                        </button>
+                        <button
+                          class="course-option w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors"
+                          data-course="Software Engineering"
+                        >
+                          Software Engineering
+                        </button>
+                        <button
+                          class="course-option w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors"
+                          data-course="Database Systems"
+                        >
+                          Database Systems
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"
+                      >Date</label
+                    >
+                    <input
+                      type="date"
+                      id="session-date"
+                      class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2"
+                      >Time</label
+                    >
+                    <input
+                      type="time"
+                      id="session-time"
+                      class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  id="generate-btn"
+                  class="rounded-button whitespace-nowrap w-full bg-primary text-white py-3 font-semibold hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  disabled
+                >
+                  Generate QR Code
+                </button>
+              </div>
+            </div>
+
+            <!-- QR Code Display -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+              <h2 class="text-xl font-semibold mb-6">QR Code</h2>
+
+              <div
+                id="qr-placeholder"
+                class="qr-code-container rounded-xl p-8 text-center"
+              >
+                <div
+                  class="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-4"
+                >
+                  <i class="ri-qr-code-line text-4xl text-gray-400"></i>
+                </div>
+                <p class="text-gray-500">
+                  Select a course and generate QR code
+                </p>
+              </div>
+
+              <div id="qr-display" class="hidden">
+                <div class="qr-code-container rounded-xl p-8 text-center mb-6">
+                  <div
+                    class="w-48 h-48 bg-white rounded-lg mx-auto mb-4 flex items-center justify-center border-2 border-dashed border-gray-300"
+                  >
+                    <div class="text-center">
+                      <div
+                        class="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto mb-2"
+                      >
+                        <i class="ri-qr-code-line text-3xl text-white"></i>
+                      </div>
+                      <p class="text-sm text-gray-600">QR Code Generated</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  id="session-info"
+                  class="bg-gray-50 rounded-lg p-4 space-y-2"
+                >
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Course:</span>
+                    <span id="info-course" class="text-sm font-medium">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Date:</span>
+                    <span id="info-date" class="text-sm font-medium">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Time:</span>
+                    <span id="info-time" class="text-sm font-medium">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-sm text-gray-600">Status:</span>
+                    <span class="text-sm font-medium text-secondary"
+                      >Active</span
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Student Attendance Page -->
+    <div id="student-attendance" class="page">
+      <div
+        class="min-h-screen bg-gray-50 flex items-center justify-center px-4"
+      >
+        <div class="w-full max-w-md">
+          <div class="bg-white rounded-2xl shadow-xl p-8">
+            <div class="text-center mb-8">
+              <div
+                class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4"
+              >
+                <i class="ri-user-check-line text-3xl text-secondary"></i>
+              </div>
+              <h2 class="text-2xl font-bold text-gray-900">Mark Attendance</h2>
+              <p class="text-gray-600 mt-2">
+                Enter your details to record attendance
+              </p>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <div class="flex items-center gap-3">
+                <div class="w-5 h-5 flex items-center justify-center">
+                  <i class="ri-book-line text-blue-600"></i>
+                </div>
+                <div>
+                  <p class="font-medium text-blue-900">Computer Science 101</p>
+                  <p class="text-sm text-blue-700">
+                    Today, January 20, 2026 - 10:00 AM
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <form id="attendance-form" class="space-y-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Student ID / Matric Number</label
+                >
+                <div class="relative">
+                  <div
+                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                  >
+                    <div class="w-5 h-5 flex items-center justify-center">
+                      <i class="ri-id-card-line text-gray-400"></i>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    id="matric-number"
+                    class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm"
+                    placeholder="Enter your matric number"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div
+                id="attendance-message"
+                class="hidden px-4 py-3 rounded-lg text-sm"
+              ></div>
+
+              <button
+                type="submit"
+                class="rounded-button whitespace-nowrap w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors"
+              >
+                Submit Attendance
+              </button>
+            </form>
+
+            <div class="mt-6 text-center">
+              <button
+                onclick="showPage('landing-page')"
+                class="text-secondary hover:text-green-600 text-sm font-medium"
+              >
+                ← Back to Home
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Confirmation Page -->
+    <div id="attendance-confirmation" class="page">
+      <div
+        class="min-h-screen bg-gray-50 flex items-center justify-center px-4"
+      >
+        <div class="w-full max-w-md">
+          <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+            <div
+              class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6"
+            >
+              <i class="ri-check-line text-4xl text-secondary"></i>
+            </div>
+
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">
+              Attendance Successfully Recorded
+            </h2>
+            <p class="text-gray-600 mb-8">
+              Your attendance has been marked for today's session
+            </p>
+
+            <div class="bg-gray-50 rounded-lg p-4 mb-8 space-y-2">
+              <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Course:</span>
+                <span class="text-sm font-medium">Computer Science 101</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Date:</span>
+                <span class="text-sm font-medium">January 20, 2026</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Time:</span>
+                <span class="text-sm font-medium">10:15 AM</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-sm text-gray-600">Student ID:</span>
+                <span class="text-sm font-medium">CS2024001</span>
+              </div>
+            </div>
+
+            <button
+              onclick="showPage('landing-page')"
+              class="rounded-button whitespace-nowrap w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Attendance Page -->
+    <div id="view-attendance" class="page">
+      <div class="min-h-screen bg-gray-50">
+        <!-- Top Navigation -->
+        <nav class="bg-white shadow-sm border-b">
+          <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+              <div class="flex items-center gap-4">
+                <button
+                  onclick="showPage('lecturer-dashboard')"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <i class="ri-arrow-left-line text-xl"></i>
+                </button>
+                <h1 class="text-xl font-semibold">View Attendance</h1>
+              </div>
+              <button
+                onclick="showPage('landing-page')"
+                class="rounded-button whitespace-nowrap bg-gray-100 text-gray-700 px-4 py-2 text-sm hover:bg-gray-200 transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+          <!-- Filters -->
+          <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+            <h2 class="text-lg font-semibold mb-4">Filters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >Course</label
+                >
+                <div class="relative">
+                  <button
+                    class="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-left flex items-center justify-between hover:border-gray-400 transition-colors text-sm"
+                  >
+                    <span>Computer Science 101</span>
+                    <div class="w-4 h-4 flex items-center justify-center">
+                      <i class="ri-arrow-down-s-line text-gray-400"></i>
+                    </div>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >From Date</label
+                >
+                <input
+                  type="date"
+                  class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                  value="2026-01-15"
+                />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2"
+                  >To Date</label
+                >
+                <input
+                  type="date"
+                  class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent"
+                  value="2026-01-20"
+                />
+              </div>
+              <div class="flex items-end">
+                <button
+                  class="rounded-button whitespace-nowrap w-full bg-primary text-white py-2 text-sm font-medium hover:bg-blue-600 transition-colors"
+                >
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Attendance Table -->
+          <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div
+              class="px-6 py-4 border-b border-gray-200 flex justify-between items-center"
+            >
+              <h2 class="text-lg font-semibold">Attendance Records</h2>
+              <div class="flex gap-2">
+                <button
+                  class="rounded-button whitespace-nowrap bg-green-600 text-white px-4 py-2 text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2"
+                >
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-file-excel-line"></i>
+                  </div>
+                  Export Excel
+                </button>
+                <button
+                  class="rounded-button whitespace-nowrap bg-red-600 text-white px-4 py-2 text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2"
+                >
+                  <div class="w-4 h-4 flex items-center justify-center">
+                    <i class="ri-file-pdf-line"></i>
+                  </div>
+                  Export PDF
+                </button>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Student Name
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Matric Number
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Date
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Time Signed
+                    </th>
+                    <th
+                      class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      Emily Chen
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      CS2024001
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      Jan 20, 2026
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      10:05 AM
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"
+                        >Present</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      Michael Rodriguez
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      CS2024002
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      Jan 20, 2026
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      10:08 AM
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"
+                        >Present</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      Sarah Thompson
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      CS2024003
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      Jan 20, 2026
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      10:12 AM
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"
+                        >Present</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      David Kim
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      CS2024004
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      Jan 20, 2026
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      -
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800"
+                        >Absent</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      Jessica Martinez
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      CS2024005
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      Jan 20, 2026
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      10:15 AM
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800"
+                        >Present</span
+                      >
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+                    >
+                      Alex Johnson
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      CS2024006
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      Jan 20, 2026
+                    </td>
+                    <td
+                      class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    >
+                      10:18 AM
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                      <span
+                        class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800"
+                        >Late</span
+                      >
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div
+              class="px-6 py-4 border-t border-gray-200 flex items-center justify-between"
+            >
+              <div class="text-sm text-gray-700">
+                Showing <span class="font-medium">1</span> to
+                <span class="font-medium">6</span> of
+                <span class="font-medium">32</span> results
+              </div>
+              <div class="flex gap-2">
+                <button
+                  class="rounded-button whitespace-nowrap px-3 py-1 border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Previous
+                </button>
+                <button
+                  class="rounded-button whitespace-nowrap px-3 py-1 bg-primary text-white text-sm"
+                >
+                  1
+                </button>
+                <button
+                  class="rounded-button whitespace-nowrap px-3 py-1 border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  2
+                </button>
+                <button
+                  class="rounded-button whitespace-nowrap px-3 py-1 border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  3
+                </button>
+                <button
+                  class="rounded-button whitespace-nowrap px-3 py-1 border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Page Navigation
+      function showPage(pageId) {
+        document.querySelectorAll('.page').forEach((page) => {
+          page.classList.remove('active');
+        });
+        document.getElementById(pageId).classList.add('active');
+      }
+
+      // Login Form Handler
+      document.addEventListener('DOMContentLoaded', function () {
+        const loginForm = document.getElementById('login-form');
+        const errorMessage = document.getElementById('error-message');
+
+        if (loginForm) {
+          loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === 'lecturer' && password === 'password') {
+              showPage('lecturer-dashboard');
+            } else {
+              errorMessage.textContent =
+                'Invalid username or password. Please try again.';
+              errorMessage.classList.remove('hidden');
+            }
+          });
+        }
+
+        // QR Generator
+        const courseDropdown = document.getElementById('course-dropdown');
+        if (courseDropdown) {
+          const courseOptions = document.getElementById('course-options');
+          const selectedCourse = document.getElementById('selected-course');
+          const generateBtn = document.getElementById('generate-btn');
+          const sessionDate = document.getElementById('session-date');
+          const sessionTime = document.getElementById('session-time');
+
+          // Set default date and time
+          const now = new Date();
+          if (sessionDate) sessionDate.value = now.toISOString().split('T')[0];
+          if (sessionTime) sessionTime.value = now.toTimeString().slice(0, 5);
+
+          courseDropdown.addEventListener('click', function () {
+            courseOptions.classList.toggle('hidden');
+          });
+
+          document.querySelectorAll('.course-option').forEach((option) => {
+            option.addEventListener('click', function () {
+              const course = this.dataset.course;
+              selectedCourse.textContent = course;
+              courseOptions.classList.add('hidden');
+              if (generateBtn) generateBtn.disabled = false;
+            });
+          });
+
+          if (generateBtn) {
+            generateBtn.addEventListener('click', function () {
+              const course = selectedCourse.textContent;
+              const date = sessionDate.value;
+              const time = sessionTime.value;
+
+              document.getElementById('qr-placeholder').classList.add('hidden');
+              document.getElementById('qr-display').classList.remove('hidden');
+
+              document.getElementById('info-course').textContent = course;
+              document.getElementById('info-date').textContent = new Date(
+                date
+              ).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              });
+              document.getElementById('info-time').textContent = new Date(
+                `2000-01-01T${time}`
+              ).toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+              });
+            });
+          }
+
+          document.addEventListener('click', function (e) {
+            if (
+              courseDropdown &&
+              !courseDropdown.contains(e.target) &&
+              courseOptions &&
+              !courseOptions.contains(e.target)
+            ) {
+              courseOptions.classList.add('hidden');
+            }
+          });
+        }
+
+        // Attendance Form Handler
+        const attendanceForm = document.getElementById('attendance-form');
+        if (attendanceForm) {
+          const attendanceMessage =
+            document.getElementById('attendance-message');
+
+          attendanceForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const matricNumber = document.getElementById('matric-number').value;
+
+            if (matricNumber.length < 6) {
+              attendanceMessage.textContent =
+                'Please enter a valid matric number (minimum 6 characters).';
+              attendanceMessage.className =
+                'bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm';
+              attendanceMessage.classList.remove('hidden');
+              return;
+            }
+
+            if (matricNumber === 'CS2024001') {
+              attendanceMessage.textContent =
+                'Attendance already recorded for this session.';
+              attendanceMessage.className =
+                'bg-yellow-50 border border-yellow-200 text-yellow-600 px-4 py-3 rounded-lg text-sm';
+              attendanceMessage.classList.remove('hidden');
+              return;
+            }
+
+            setTimeout(() => {
+              showPage('attendance-confirmation');
+            }, 500);
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
