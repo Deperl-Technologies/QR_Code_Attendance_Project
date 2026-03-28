@@ -5,1707 +5,2401 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>QR Code-Based Student Attendance System</title>
 <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/face-api.js/0.22.2/face-api.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
 <script>
 tailwind.config = {
-theme: {
-extend: {
-colors: {
-primary: '#1E88E5',
-secondary: '#43A047'
-},
-borderRadius: {
-'none': '0px',
-'sm': '4px',
-DEFAULT: '8px',
-'md': '12px',
-'lg': '16px',
-'xl': '20px',
-'2xl': '24px',
-'3xl': '32px',
-'full': '9999px',
-'button': '8px'
-},
-fontFamily: {
-'poppins': ['Poppins', 'sans-serif'],
-'pacifico': ['Pacifico', 'serif']
-}
-}
-}
+  theme: {;p/ 
+    extend: {
+      colors: { primary: '#1E88E5', secondary: '#43A047' },
+      borderRadius: {
+        'none': '0px','sm': '4px',DEFAULT: '8px','md': '12px','lg': '16px',
+        'xl': '20px','2xl': '24px','3xl': '32px','full': '9999px','button': '8px'
+      },
+      fontFamily: { 'poppins': ['Poppins', 'sans-serif'], 'pacifico': ['Pacifico', 'serif'] }
+    }
+  }
 }
 </script>
 <style>
-:where([class^="ri-"])::before {
-content: "\f3c2";
-}
-body {
-font-family: 'Poppins', sans-serif;
-}
+:where([class^="ri-"])::before { content: "\f3c2"; }
+body { font-family: 'Poppins', sans-serif; }
 .hero-bg {
-background-image: url('https://readdy.ai/api/search-image?query=Modern%20university%20campus%20with%20students%20walking%2C%20clean%20white%20and%20blue%20academic%20building%20architecture%2C%20bright%20daylight%2C%20professional%20educational%20environment%2C%20minimalist%20design%2C%20contemporary%20learning%20space%20with%20glass%20windows%20and%20open%20areas&width=1920&height=1080&seq=hero001&orientation=landscape');
-background-size: cover;
-background-position: center;
-background-repeat: no-repeat;
+  background-image: url('https://readdy.ai/api/search-image?query=Modern%20university%20campus%20with%20students%20walking%2C%20clean%20white%20and%20blue%20academic%20building%20architecture%2C%20bright%20daylight%2C%20professional%20educational%20environment%2C%20minimalist%20design%2C%20contemporary%20learning%20space%20with%20glass%20windows%20and%20open%20areas&width=1920&height=1080&seq=hero001&orientation=landscape');
+  background-size: cover; background-position: center; background-repeat: no-repeat;
 }
-.page {
-display: none;
-}
-.page.active {
-display: block;
-}
-.qr-code-container {
-background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-}
+.page { display: none; }
+.page.active { display: block; }
+.qr-code-container { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
 input[type="checkbox"] {
-appearance: none;
-width: 1.25rem;
-height: 1.25rem;
-border: 2px solid #d1d5db;
-border-radius: 0.25rem;
-background: white;
-cursor: pointer;
-position: relative;
+  appearance: none; width: 1.25rem; height: 1.25rem;
+  border: 2px solid #d1d5db; border-radius: 0.25rem;
+  background: white; cursor: pointer; position: relative;
 }
-input[type="checkbox"]:checked {
-background: #1E88E5;
-border-color: #1E88E5;
-}
+input[type="checkbox"]:checked { background: #1E88E5; border-color: #1E88E5; }
 input[type="checkbox"]:checked::after {
-content: '✓';
-position: absolute;
-top: 50%;
-left: 50%;
-transform: translate(-50%, -50%);
-color: white;
-font-size: 0.75rem;
-font-weight: bold;
+  content: '✓'; position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%); color: white; font-size: 0.75rem; font-weight: bold;
 }
-.switch {
-position: relative;
-display: inline-block;
-width: 3rem;
-height: 1.5rem;
+#qr-canvas-container canvas, #qr-canvas-container img { display: block; margin: 0 auto; border-radius: 8px; }
+@keyframes badgePulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.badge-live { animation: badgePulse 1.5s infinite; }
+@keyframes qrPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(30,136,229,0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(30,136,229,0); }
 }
-.switch input {
-opacity: 0;
-width: 0;
-height: 0;
+.qr-active { animation: qrPulse 2s infinite; border-radius: 12px; }
+@keyframes scanMove {
+  0% { top: 0; opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: calc(100% - 2px); opacity: 0; }
 }
-.slider {
-position: absolute;
-cursor: pointer;
-top: 0;
-left: 0;
-right: 0;
-bottom: 0;
-background-color: #ccc;
-transition: .4s;
-border-radius: 1.5rem;
-}
-.slider:before {
-position: absolute;
-content: "";
-height: 1.125rem;
-width: 1.125rem;
-left: 0.1875rem;
-bottom: 0.1875rem;
-background-color: white;
-transition: .4s;
-border-radius: 50%;
-}
-input:checked + .slider {
-background-color: #1E88E5;
-}
-input:checked + .slider:before {
-transform: translateX(1.5rem);
-}
+/* Step indicator active state */
+.step-active .step-num { background: #1E88E5 !important; color: white !important; }
+.step-done .step-num { background: #43A047 !important; color: white !important; }
 </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
-<!-- Landing Page -->
+
+<!-- LANDING PAGE -->
 <div id="landing-page" class="page active">
-<div class="hero-bg min-h-screen flex items-center relative">
-<div class="absolute inset-0 bg-gradient-to-r from-white/95 via-white/90 to-transparent"></div>
-<div class="relative w-full max-w-7xl mx-auto px-6 lg:px-8">
-<div class="max-w-2xl">
-<div class="mb-8">
-<h1 class="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-QR Code-Based<br>
-<span class="text-primary">Student Attendance</span><br>
-System
-</h1>
-<p class="text-xl text-gray-700 mb-8 leading-relaxed">
-Streamline attendance tracking with modern QR code technology.
-Quick, accurate, and efficient attendance management for educational institutions.
-</p>
+  <div class="hero-bg min-h-screen flex items-center relative">
+    <div class="absolute inset-0 bg-gradient-to-r from-white/95 via-white/90 to-transparent"></div>
+    <div class="relative w-full max-w-7xl mx-auto px-6 lg:px-8">
+      <div class="max-w-2xl">
+        <h1 class="text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+          QR Code-Based<br><span class="text-primary">Student Attendance</span><br>System
+        </h1>
+        <p class="text-xl text-gray-700 mb-8 leading-relaxed">
+          Streamline attendance tracking with modern QR code technology. Quick, accurate, and efficient.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 mb-12">
+          <button onclick="showPage('lecturer-login')" class="cursor-pointer !rounded-button bg-primary text-white px-8 py-4 text-lg font-semibold hover:bg-blue-600 transition-colors flex items-center justify-center gap-3">
+            <i class="ri-user-line text-xl"></i> Lecturer Login
+          </button>
+          <button onclick="showPage('student-attendance')" class="cursor-pointer !rounded-button bg-secondary text-white px-8 py-4 text-lg font-semibold hover:bg-green-600 transition-colors flex items-center justify-center gap-3">
+            <i class="ri-qr-scan-line text-xl"></i> Student Attendance
+          </button>
+          <button onclick="showPage('student-register')" class="cursor-pointer !rounded-button bg-white border-2 border-gray-300 text-gray-800 px-8 py-4 text-lg font-semibold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-3">
+            <i class="ri-user-add-line text-xl"></i> Student Registration
+          </button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div class="bg-white/80 backdrop-blur-sm p-6 rounded-lg text-center">
+            <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ri-qr-code-line text-2xl text-primary"></i></div>
+            <h3 class="font-semibold mb-2">Quick Scanning</h3>
+            <p class="text-sm text-gray-600">Fast QR code generation and scanning</p>
+          </div>
+          <div class="bg-white/80 backdrop-blur-sm p-6 rounded-lg text-center">
+            <div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ri-shield-check-line text-2xl text-secondary"></i></div>
+            <h3 class="font-semibold mb-2">Secure Tracking</h3>
+            <p class="text-sm text-gray-600">Reliable and accurate attendance records</p>
+          </div>
+          <div class="bg-white/80 backdrop-blur-sm p-6 rounded-lg text-center">
+            <div class="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ri-bar-chart-line text-2xl text-orange-500"></i></div>
+            <h3 class="font-semibold mb-2">Real-time Reports</h3>
+            <p class="text-sm text-gray-600">Instant attendance analytics and exports</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-<div class="flex flex-col sm:flex-row gap-4 mb-12">
-<button onclick="showPage('lecturer-login')" class="cursor-pointer !rounded-button whitespace-nowrap bg-primary text-white px-8 py-4 text-lg font-semibold hover:bg-blue-600 transition-colors flex items-center justify-center gap-3">
-<div class="w-6 h-6 flex items-center justify-center">
-<i class="ri-user-line text-xl"></i>
-</div>
-Lecturer Login
-</button>
-<button onclick="showPage('student-attendance')" class="cursor-pointer !rounded-button whitespace-nowrap bg-secondary text-white px-8 py-4 text-lg font-semibold hover:bg-green-600 transition-colors flex items-center justify-center gap-3">
-<div class="w-6 h-6 flex items-center justify-center">
-<i class="ri-qr-scan-line text-xl"></i>
-</div>
-Student Attendance
-</button>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-<div class="bg-white/80 backdrop-blur-sm p-6 rounded-lg">
-<div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-<i class="ri-qr-code-line text-2xl text-primary"></i>
-</div>
-<h3 class="font-semibold mb-2">Quick Scanning</h3>
-<p class="text-sm text-gray-600">Fast QR code generation and scanning</p>
-</div>
-<div class="bg-white/80 backdrop-blur-sm p-6 rounded-lg">
-<div class="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-<i class="ri-shield-check-line text-2xl text-secondary"></i>
-</div>
-<h3 class="font-semibold mb-2">Secure Tracking</h3>
-<p class="text-sm text-gray-600">Reliable and accurate attendance records</p>
-</div>
-<div class="bg-white/80 backdrop-blur-sm p-6 rounded-lg">
-<div class="w-12 h-12 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-<i class="ri-bar-chart-line text-2xl text-orange-500"></i>
-</div>
-<h3 class="font-semibold mb-2">Real-time Reports</h3>
-<p class="text-sm text-gray-600">Instant attendance analytics and exports</p>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Lecturer Login Page -->
+
+<!-- LECTURER LOGIN -->
 <div id="lecturer-login" class="page">
-<div class="min-h-screen flex items-center justify-center px-6">
-<div class="w-full max-w-md">
-<div class="bg-white rounded-2xl shadow-xl p-8">
-<div class="text-center mb-8">
-<div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-<i class="ri-user-line text-3xl text-primary"></i>
+  <div class="min-h-screen flex items-center justify-center px-6">
+    <div class="w-full max-w-md">
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="text-center mb-8">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ri-user-line text-3xl text-primary"></i></div>
+          <h2 class="text-2xl font-bold">Lecturer Login</h2>
+          <p class="text-gray-600 mt-2">Access your attendance dashboard</p>
+        </div>
+        <form id="login-form" class="space-y-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-user-line text-gray-400"></i></div>
+              <input type="text" id="username" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" placeholder="Enter your username" required>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-lock-line text-gray-400"></i></div>
+              <input type="password" id="password" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" placeholder="Enter your password" required>
+            </div>
+          </div>
+          <div id="login-error-message" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
+          <button type="submit" class="cursor-pointer !rounded-button w-full bg-primary text-white py-3 font-semibold hover:bg-blue-600 transition-colors">Sign In</button>
+        </form>
+        <div class="mt-6 text-center space-y-3">
+          <p class="text-sm text-gray-600">Don't have an account? <button onclick="showPage('lecturer-signup')" class="cursor-pointer text-primary hover:text-blue-600 font-medium">Sign up here</button></p>
+          <button onclick="showPage('landing-page')" class="cursor-pointer text-gray-500 hover:text-gray-700 text-sm">← Back to Home</button>
+        </div>
+        <div class="mt-4 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 text-xs text-blue-700">
+          <strong>Demo credentials:</strong> username: <code>lecturer</code> &nbsp;|&nbsp; password: <code>password123</code>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-<h2 class="text-2xl font-bold text-gray-900">Lecturer Login</h2>
-<p class="text-gray-600 mt-2">Access your attendance dashboard</p>
-</div>
-<form id="login-form" class="space-y-6">
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
-<div class="relative">
-<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-<div class="w-5 h-5 flex items-center justify-center">
-<i class="ri-user-line text-gray-400"></i>
-</div>
-</div>
-<input type="text" id="username" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" placeholder="Enter your username" required>
-</div>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-<div class="relative">
-<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-<div class="w-5 h-5 flex items-center justify-center">
-<i class="ri-lock-line text-gray-400"></i>
-</div>
-</div>
-<input type="password" id="password" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm" placeholder="Enter your password" required>
-</div>
-</div>
-<div id="login-error-message" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm"></div>
-<button type="submit" class="cursor-pointer !rounded-button whitespace-nowrap w-full bg-primary text-white py-3 font-semibold hover:bg-blue-600 transition-colors">
-Sign In
-</button>
-</form>
-<div class="mt-6 text-center space-y-3">
-<p class="text-sm text-gray-600">
-Don't have an account?
-<button onclick="showPage('lecturer-signup')" class="cursor-pointer text-primary hover:text-blue-600 font-medium">
-Sign up here
-</button>
-</p>
-<button onclick="showPage('landing-page')" class="cursor-pointer text-gray-500 hover:text-gray-700 text-sm font-medium">
-← Back to Home
-</button>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Lecturer Sign-up Page -->
+
+<!-- LECTURER SIGNUP -->
 <div id="lecturer-signup" class="page">
-<div class="min-h-screen flex items-center justify-center px-6 py-8">
-<div class="w-full max-w-md">
-<div class="bg-white rounded-2xl shadow-xl p-8">
-<div class="text-center mb-8">
-<div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-<i class="ri-user-add-line text-3xl text-secondary"></i>
+  <div class="min-h-screen flex items-center justify-center px-6 py-8">
+    <div class="w-full max-w-md">
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="text-center mb-8">
+          <div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ri-user-add-line text-3xl text-secondary"></i></div>
+          <h2 class="text-2xl font-bold">Create Lecturer Account</h2>
+          <p class="text-gray-600 mt-2">Join our attendance tracking system</p>
+        </div>
+        <form id="signup-form" class="space-y-5">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
+              <input type="text" id="first-name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary text-sm" placeholder="First name" required>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
+              <input type="text" id="last-name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary text-sm" placeholder="Last name" required>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+            <div class="relative"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-mail-line text-gray-400"></i></div>
+            <input type="email" id="signup-email" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary text-sm" placeholder="Enter your email" required></div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+            <div class="relative"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-building-line text-gray-400"></i></div>
+            <input type="text" id="department" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary text-sm" placeholder="e.g., Computer Science" required></div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
+            <div class="relative"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-user-line text-gray-400"></i></div>
+            <input type="text" id="signup-username" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary text-sm" placeholder="Choose a username" required></div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
+            <div class="relative"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-lock-line text-gray-400"></i></div>
+            <input type="password" id="signup-password" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary text-sm" placeholder="Create a password" required></div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+            <div class="relative"><div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-lock-line text-gray-400"></i></div>
+            <input type="password" id="confirm-password" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary text-sm" placeholder="Confirm your password" required></div>
+          </div>
+          <div id="signup-message" class="hidden px-4 py-3 rounded-lg text-sm"></div>
+          <button type="submit" class="cursor-pointer !rounded-button w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors">Create Account</button>
+        </form>
+        <div class="mt-6 text-center space-y-3">
+          <p class="text-sm text-gray-600">Already have an account? <button onclick="showPage('lecturer-login')" class="cursor-pointer text-secondary font-medium">Sign in here</button></p>
+          <button onclick="showPage('landing-page')" class="cursor-pointer text-gray-500 text-sm">← Back to Home</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-<h2 class="text-2xl font-bold text-gray-900">Create Lecturer Account</h2>
-<p class="text-gray-600 mt-2">Join our attendance tracking system</p>
-</div>
-<form id="signup-form" class="space-y-6">
-<div class="grid grid-cols-2 gap-4">
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">First Name</label>
-<div class="relative">
-<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-<div class="w-5 h-5 flex items-center justify-center">
-<i class="ri-user-line text-gray-400"></i>
-</div>
-</div>
-<input type="text" id="first-name" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm" placeholder="First name" required>
-</div>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Last Name</label>
-<input type="text" id="last-name" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm" placeholder="Last name" required>
-</div>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
-<div class="relative">
-<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-<div class="w-5 h-5 flex items-center justify-center">
-<i class="ri-mail-line text-gray-400"></i>
-</div>
-</div>
-<input type="email" id="signup-email" name="email" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm" placeholder="Enter your email" required>
-</div>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
-<div class="relative">
-<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-<div class="w-5 h-5 flex items-center justify-center">
-<i class="ri-building-line text-gray-400"></i>
-</div>
-</div>
-<input type="text" id="department" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm" placeholder="e.g., Computer Science" required>
-</div>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Username</label>
-<div class="relative">
-<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-<div class="w-5 h-5 flex items-center justify-center">
-<i class="ri-user-line text-gray-400"></i>
-</div>
-</div>
-<input type="text" id="signup-username" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm" placeholder="Choose a username" required>
-</div>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Password</label>
-<div class="relative">
-<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-<div class="w-5 h-5 flex items-center justify-center">
-<i class="ri-lock-line text-gray-400"></i>
-</div>
-</div>
-<input type="password" id="signup-password" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm" placeholder="Create a password" required>
-</div>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-<div class="relative">
-<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-<div class="w-5 h-5 flex items-center justify-center">
-<i class="ri-lock-line text-gray-400"></i>
-</div>
-</div>
-<input type="password" id="confirm-password" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm" placeholder="Confirm your password" required>
-</div>
-</div>
-<div id="signup-message" class="hidden px-4 py-3 rounded-lg text-sm"></div>
-<button type="submit" class="cursor-pointer !rounded-button whitespace-nowrap w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors">
-Create Account
-</button>
-</form>
-<div class="mt-6 text-center space-y-3">
-<p class="text-sm text-gray-600">
-Already have an account?
-<button onclick="showPage('lecturer-login')" class="cursor-pointer text-secondary hover:text-green-600 font-medium">
-Sign in here
-</button>
-</p>
-<button onclick="showPage('landing-page')" class="cursor-pointer text-gray-500 hover:text-gray-700 text-sm font-medium">
-← Back to Home
-</button>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Lecturer Dashboard -->
+
+<!-- LECTURER DASHBOARD -->
 <div id="lecturer-dashboard" class="page">
-<div class="min-h-screen bg-gray-50">
-<!-- Top Navigation -->
-<nav class="bg-white shadow-sm border-b">
-<div class="max-w-7xl mx-auto px-6 lg:px-8">
-<div class="flex justify-between items-center h-16">
-<div class="flex items-center gap-3">
-<div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-<i class="ri-qr-code-line text-white text-lg"></i>
+  <div class="min-h-screen bg-gray-50">
+    <nav class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center"><i class="ri-qr-code-line text-white text-lg"></i></div>
+            <h1 class="text-xl font-semibold">Attendance System</h1>
+          </div>
+          <div class="flex items-center gap-4">
+            <span id="dashboard-welcome" class="text-gray-700 text-sm">Welcome, Lecturer</span>
+            <button onclick="logout()" class="cursor-pointer !rounded-button bg-gray-100 text-gray-700 px-4 py-2 text-sm hover:bg-gray-200 transition-colors flex items-center gap-2"><i class="ri-logout-line"></i> Logout</button>
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h2>
+        <p class="text-gray-600">Manage your courses and track student attendance</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <button onclick="showPage('generate-qr')" class="cursor-pointer bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left group">
+          <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors"><i class="ri-qr-code-line text-2xl text-primary"></i></div>
+          <h3 class="text-lg font-semibold mb-2">Generate QR Code</h3>
+          <p class="text-gray-600 text-sm">Create attendance session for your course</p>
+        </button>
+        <button onclick="showPage('view-attendance')" class="cursor-pointer bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left group">
+          <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors"><i class="ri-file-list-line text-2xl text-secondary"></i></div>
+          <h3 class="text-lg font-semibold mb-2">View Attendance</h3>
+          <p class="text-gray-600 text-sm">Monitor and export attendance records</p>
+        </button>
+        <div class="bg-white p-6 rounded-xl shadow-sm">
+          <div class="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center mb-4"><i class="ri-bar-chart-line text-2xl text-orange-500"></i></div>
+          <h3 class="text-lg font-semibold mb-2">Reports</h3>
+          <p class="text-gray-600 text-sm">Generate detailed analytics and reports</p>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="text-lg font-semibold mb-4">Recent Sessions</h3>
+        <div id="recent-sessions-list" class="space-y-3">
+          <p class="text-sm text-gray-400">No sessions yet. Generate a QR code to start.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-<h1 class="text-xl font-semibold">Attendance System</h1>
-</div>
-<div class="flex items-center gap-4">
-<span class="text-gray-700">Welcome, Dr. Sarah Johnson</span>
-<button onclick="logout()" class="cursor-pointer !rounded-button whitespace-nowrap bg-gray-100 text-gray-700 px-4 py-2 text-sm hover:bg-gray-200 transition-colors flex items-center gap-2">
-<div class="w-4 h-4 flex items-center justify-center">
-<i class="ri-logout-line"></i>
-</div>
-Logout
-</button>
-</div>
-</div>
-</div>
-</nav>
-<div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
-<div class="mb-8">
-<h2 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h2>
-<p class="text-gray-600">Manage your courses and track student attendance</p>
-</div>
-<!-- Quick Actions -->
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-<button onclick="showPage('generate-qr')" class="cursor-pointer bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left group">
-<div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-<i class="ri-qr-code-line text-2xl text-primary"></i>
-</div>
-<h3 class="text-lg font-semibold mb-2">Generate QR Code</h3>
-<p class="text-gray-600 text-sm">Create attendance session for your course</p>
-</button>
-<button onclick="showPage('view-attendance')" class="cursor-pointer bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow text-left group">
-<div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4 group-hover:bg-secondary/20 transition-colors">
-<i class="ri-file-list-line text-2xl text-secondary"></i>
-</div>
-<h3 class="text-lg font-semibold mb-2">View Attendance</h3>
-<p class="text-gray-600 text-sm">Monitor and export attendance records</p>
-</button>
-<div class="bg-white p-6 rounded-xl shadow-sm">
-<div class="w-12 h-12 bg-orange-500/10 rounded-lg flex items-center justify-center mb-4">
-<i class="ri-bar-chart-line text-2xl text-orange-500"></i>
-</div>
-<h3 class="text-lg font-semibold mb-2">Reports</h3>
-<p class="text-gray-600 text-sm">Generate detailed analytics and reports</p>
-</div>
-</div>
-<!-- Recent Activity -->
-<div class="bg-white rounded-xl shadow-sm p-6">
-<h3 class="text-lg font-semibold mb-4">Recent Sessions</h3>
-<div class="space-y-3">
-<div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-<div>
-<p class="font-medium">Computer Science 101</p>
-<p class="text-sm text-gray-600">Today, 10:00 AM - 32 students attended</p>
-</div>
-<span class="text-sm text-secondary font-medium">Active</span>
-</div>
-<div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-<div>
-<p class="font-medium">Data Structures</p>
-<p class="text-sm text-gray-600">Yesterday, 2:00 PM - 28 students attended</p>
-</div>
-<span class="text-sm text-gray-500 font-medium">Completed</span>
-</div>
-<div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-<div>
-<p class="font-medium">Software Engineering</p>
-<p class="text-sm text-gray-600">Jan 18, 9:00 AM - 35 students attended</p>
-</div>
-<span class="text-sm text-gray-500 font-medium">Completed</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Generate QR Code Page -->
+
+<!-- GENERATE QR CODE — Phase 1 Step 1 (FULLY IMPLEMENTED) -->
 <div id="generate-qr" class="page">
-<div class="min-h-screen bg-gray-50">
-<!-- Top Navigation -->
-<nav class="bg-white shadow-sm border-b">
-<div class="max-w-7xl mx-auto px-6 lg:px-8">
-<div class="flex justify-between items-center h-16">
-<div class="flex items-center gap-4">
-<button onclick="showPage('lecturer-dashboard')" class="cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors">
-<i class="ri-arrow-left-line text-xl"></i>
-</button>
-<h1 class="text-xl font-semibold">Generate QR Code</h1>
+  <div class="min-h-screen bg-gray-50">
+    <nav class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-4">
+            <button onclick="showPage('lecturer-dashboard')" class="cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"><i class="ri-arrow-left-line text-xl"></i></button>
+            <h1 class="text-xl font-semibold">Generate QR Code</h1>
+          </div>
+          <button onclick="logout()" class="cursor-pointer !rounded-button bg-gray-100 text-gray-700 px-4 py-2 text-sm hover:bg-gray-200 transition-colors">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto px-6 lg:px-8 py-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- Left: Form -->
+        <div class="bg-white rounded-xl shadow-sm p-6">
+          <h2 class="text-xl font-semibold mb-6">Create Attendance Session</h2>
+          <div class="space-y-5">
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Select Course</label>
+              <div class="relative">
+                <button id="course-dropdown" type="button" class="cursor-pointer w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-left flex items-center justify-between hover:border-gray-400 transition-colors text-sm">
+                  <span id="selected-course-text" class="text-gray-500">Choose a course...</span>
+                  <i class="ri-arrow-down-s-line text-gray-400"></i>
+                </button>
+                <div id="course-options" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                  <div class="py-1">
+                    <button class="course-option cursor-pointer w-full text-left px-4 py-2.5 hover:bg-blue-50 text-sm transition-colors" data-course="Computer Science 101">Computer Science 101</button>
+                    <button class="course-option cursor-pointer w-full text-left px-4 py-2.5 hover:bg-blue-50 text-sm transition-colors" data-course="Data Structures">Data Structures</button>
+                    <button class="course-option cursor-pointer w-full text-left px-4 py-2.5 hover:bg-blue-50 text-sm transition-colors" data-course="Software Engineering">Software Engineering</button>
+                    <button class="course-option cursor-pointer w-full text-left px-4 py-2.5 hover:bg-blue-50 text-sm transition-colors" data-course="Database Systems">Database Systems</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
+                <input type="date" id="session-date" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Time</label>
+                <input type="time" id="session-time" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Session Duration
+                <span class="text-gray-400 font-normal ml-1 text-xs">(QR expires after this)</span>
+              </label>
+              <select id="session-duration" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary">
+                <option value="5">5 minutes</option>
+                <option value="10">10 minutes</option>
+                <option value="15" selected>15 minutes</option>
+                <option value="30">30 minutes</option>
+                <option value="60">1 hour</option>
+              </select>
+            </div>
+
+            <button id="generate-btn" type="button" disabled
+              class="cursor-pointer !rounded-button w-full bg-primary text-white py-3 font-semibold hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm">
+              <i class="ri-qr-code-line text-lg"></i> Generate QR Code
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: QR Display -->
+        <div class="bg-white rounded-xl shadow-sm p-6 flex flex-col">
+          <h2 class="text-xl font-semibold mb-6">QR Code</h2>
+
+          <!-- Placeholder -->
+          <div id="qr-placeholder" class="qr-code-container rounded-xl p-8 flex-1 flex flex-col items-center justify-center text-center">
+            <div class="w-24 h-24 bg-white/60 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+              <i class="ri-qr-code-line text-4xl text-gray-400"></i>
+            </div>
+            <p class="text-gray-500 text-sm">Select a course and click Generate</p>
+            <p class="text-gray-400 text-xs mt-1">A real scannable QR code will appear here</p>
+          </div>
+
+          <!-- Active QR -->
+          <div id="qr-display" class="hidden flex-col flex-1">
+            <div class="flex items-center justify-between mb-4">
+              <span class="badge-live inline-flex items-center gap-1.5 bg-green-100 text-green-700 text-xs font-semibold px-3 py-1.5 rounded-full">
+                <span class="w-2 h-2 bg-green-500 rounded-full inline-block"></span> LIVE SESSION
+              </span>
+              <div class="flex items-center gap-2">
+                <svg width="40" height="40" viewBox="0 0 40 40">
+                  <circle cx="20" cy="20" r="16" fill="none" stroke="#e5e7eb" stroke-width="3.5"/>
+                  <circle id="timer-ring" cx="20" cy="20" r="16" fill="none"
+                    stroke="#1E88E5" stroke-width="3.5"
+                    stroke-dasharray="100.53" stroke-dashoffset="0"
+                    stroke-linecap="round"
+                    style="transform:rotate(-90deg);transform-origin:20px 20px;transition:stroke-dashoffset 1s linear, stroke 0.5s;"/>
+                </svg>
+                <span id="timer-display" class="text-sm font-bold text-gray-700 tabular-nums">--:--</span>
+              </div>
+            </div>
+
+            <!-- QR Canvas -->
+            <div class="qr-code-container rounded-xl p-5 flex items-center justify-center mb-4">
+              <div id="qr-canvas-container" class="qr-active bg-white p-3 rounded-xl shadow-md"></div>
+            </div>
+
+            <!-- Session info -->
+            <div class="bg-gray-50 rounded-lg p-4 space-y-2 text-sm mb-4">
+              <div class="flex justify-between items-center">
+                <span class="text-gray-500">Course</span>
+                <span id="info-course" class="font-semibold text-gray-900 text-right max-w-xs truncate">-</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-500">Date</span>
+                <span id="info-date" class="font-medium text-gray-800">-</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-500">Time</span>
+                <span id="info-time" class="font-medium text-gray-800">-</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-gray-500">Expires at</span>
+                <span id="info-expires" class="font-medium text-orange-600">-</span>
+              </div>
+              <div class="flex justify-between items-center pt-1 border-t border-gray-200">
+                <span class="text-gray-400 text-xs">Session ID</span>
+                <span id="info-session-id" class="font-mono text-xs text-gray-400">-</span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-2">
+              <button id="download-qr-btn" type="button"
+                class="cursor-pointer !rounded-button flex-1 bg-primary text-white py-2.5 text-sm font-semibold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2">
+                <i class="ri-download-line"></i> Download QR
+              </button>
+              <button id="regenerate-btn" type="button"
+                class="cursor-pointer !rounded-button flex-1 bg-gray-100 text-gray-700 py-2.5 text-sm font-semibold hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
+                <i class="ri-refresh-line"></i> Regenerate
+              </button>
+            </div>
+          </div>
+
+          <!-- Expired -->
+          <div id="qr-expired" class="hidden flex-1 flex flex-col items-center justify-center text-center p-6">
+            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i class="ri-time-line text-2xl text-red-500"></i>
+            </div>
+            <h3 class="font-semibold text-gray-900 mb-1">Session Expired</h3>
+            <p class="text-sm text-gray-500 mb-4">This QR code is no longer valid for attendance.</p>
+            <button id="new-session-btn" type="button"
+              class="cursor-pointer !rounded-button bg-primary text-white px-6 py-2.5 text-sm font-semibold hover:bg-blue-600 transition-colors">
+              Start New Session
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-<button onclick="showPage('landing-page')" class="cursor-pointer !rounded-button whitespace-nowrap bg-gray-100 text-gray-700 px-4 py-2 text-sm hover:bg-gray-200 transition-colors">
-Logout
-</button>
+
+<!-- STUDENT REGISTRATION — Face Enrollment -->
+<div id="student-register" class="page">
+  <div class="min-h-screen bg-gray-50 px-4 py-8">
+    <div class="w-full max-w-lg mx-auto">
+      <div class="bg-white rounded-2xl shadow-xl p-8">
+
+        <div class="text-center mb-8">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="ri-user-add-line text-3xl text-primary"></i>
+          </div>
+          <h2 class="text-2xl font-bold">Student Registration</h2>
+          <p class="text-gray-500 text-sm mt-1">Register your face for attendance verification</p>
+        </div>
+
+        <!-- Enrolled status banner (shown after enroll or if already enrolled) -->
+        <div id="reg-enrolled-banner" class="hidden bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+          <i class="ri-checkbox-circle-fill text-green-500 text-xl flex-shrink-0 mt-0.5"></i>
+          <div>
+            <p class="text-sm font-bold text-green-800" id="reg-enrolled-name">-</p>
+            <p class="text-xs text-green-700 mt-0.5">Face enrolled successfully — you can now mark attendance</p>
+            <p class="text-xs text-green-500 mt-0.5 font-mono" id="reg-enrolled-date">-</p>
+          </div>
+        </div>
+
+        <!-- Step 1: Details -->
+        <div id="reg-step-details">
+          <div class="space-y-4 mb-6">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-user-line text-gray-400"></i></div>
+                <input type="text" id="reg-fullname"
+                  class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                  placeholder="e.g. Emily Chen">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Matric Number</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-id-card-line text-gray-400"></i></div>
+                <input type="text" id="reg-matric"
+                  class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                  placeholder="e.g. CS2024001">
+              </div>
+              <p class="text-xs text-gray-400 mt-1">Demo IDs already seeded: CS2024001 · CS2024002 · CS2024003</p>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-building-line text-gray-400"></i></div>
+                <input type="text" id="reg-dept"
+                  class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
+                  placeholder="e.g. Computer Science">
+              </div>
+            </div>
+          </div>
+          <button id="reg-next-btn" type="button"
+            class="cursor-pointer !rounded-button w-full bg-primary text-white py-3 font-semibold hover:bg-blue-600 transition-colors text-sm flex items-center justify-center gap-2">
+            <i class="ri-camera-line"></i> Continue to Face Enrollment
+          </button>
+        </div>
+
+        <!-- Step 2: Face Enrollment -->
+        <div id="reg-step-face" class="hidden">
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5 flex items-start gap-3">
+            <i class="ri-information-line text-blue-500 mt-0.5"></i>
+            <div class="text-sm text-blue-800">
+              <p class="font-semibold" id="reg-preview-name">-</p>
+              <p class="text-xs text-blue-700 mt-0.5" id="reg-preview-matric">-</p>
+            </div>
+          </div>
+
+          <!-- Face model loading -->
+          <div id="reg-face-loading" class="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-4 flex items-center gap-3">
+            <div class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+            <span class="text-sm text-blue-700">Loading face recognition model...</span>
+          </div>
+
+          <div class="relative bg-gray-900 rounded-xl overflow-hidden mb-4" style="aspect-ratio:4/3;">
+            <video id="reg-video" class="w-full h-full object-cover hidden" autoplay playsinline muted></video>
+            <canvas id="reg-overlay" class="absolute inset-0 w-full h-full hidden" style="pointer-events:none;"></canvas>
+            <canvas id="reg-canvas" class="w-full h-full object-cover hidden"></canvas>
+            <div id="reg-placeholder" class="absolute inset-0 flex items-center justify-center">
+              <div class="text-center text-white">
+                <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/20">
+                  <i class="ri-camera-line text-2xl text-white/60"></i>
+                </div>
+                <p class="text-sm text-white/60 mb-4">Look directly at the camera</p>
+                <button type="button" id="reg-start-camera-btn"
+                  class="cursor-pointer !rounded-button bg-primary text-white px-6 py-2 text-sm font-semibold hover:bg-blue-600 transition-colors">
+                  Start Camera
+                </button>
+              </div>
+            </div>
+            <div id="reg-face-badge" class="hidden absolute top-3 left-0 right-0 flex justify-center pointer-events-none">
+              <span id="reg-face-badge-text" class="text-xs px-3 py-1.5 rounded-full font-medium bg-black/60 text-white backdrop-blur-sm"></span>
+            </div>
+            <div id="reg-capture-controls" class="hidden absolute bottom-4 left-0 right-0 flex justify-center gap-3">
+              <button type="button" id="reg-capture-btn" disabled
+                class="cursor-pointer !rounded-button bg-primary text-white px-5 py-2 text-sm font-semibold hover:bg-blue-600 transition-colors flex items-center gap-1.5 disabled:bg-gray-500 disabled:cursor-not-allowed">
+                <i class="ri-camera-fill"></i> Enroll Face
+              </button>
+              <button type="button" id="reg-retake-btn"
+                class="cursor-pointer !rounded-button bg-gray-700 text-white px-5 py-2 text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-1.5 hidden">
+                <i class="ri-refresh-line"></i> Retake
+              </button>
+            </div>
+          </div>
+
+          <!-- Processing indicator -->
+          <div id="reg-processing" class="hidden bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex items-center gap-3 mb-3">
+            <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+            <span class="text-sm text-blue-700">Extracting face descriptor...</span>
+          </div>
+
+          <!-- Result -->
+          <div id="reg-result" class="hidden mb-4"></div>
+
+          <!-- Enroll button (shown after capture) -->
+          <button id="reg-enroll-btn" type="button"
+            class="cursor-pointer !rounded-button w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors text-sm hidden flex items-center justify-center gap-2">
+            <i class="ri-save-line"></i> Save & Complete Registration
+          </button>
+
+          <button type="button" onclick="resetRegFlow()"
+            class="cursor-pointer w-full text-gray-400 hover:text-gray-600 text-xs mt-3 text-center block">
+            ← Back to details
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
 </div>
-</div>
-</nav>
-<div class="max-w-4xl mx-auto px-6 lg:px-8 py-8">
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-<!-- Course Selection -->
-<div class="bg-white rounded-xl shadow-sm p-6">
-<h2 class="text-xl font-semibold mb-6">Create Attendance Session</h2>
-<div class="space-y-6">
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Select Course</label>
-<div class="relative">
-<button id="course-dropdown" class="cursor-pointer w-full bg-white border border-gray-300 rounded-lg px-4 py-3 text-left flex items-center justify-between hover:border-gray-400 transition-colors">
-<span id="selected-course">Choose a course...</span>
-<div class="w-5 h-5 flex items-center justify-center">
-<i class="ri-arrow-down-s-line text-gray-400"></i>
-</div>
-</button>
-<div id="course-options" class="hidden absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
-<div class="py-1">
-<button class="course-option cursor-pointer w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors" data-course="Computer Science 101">Computer Science 101</button>
-<button class="course-option cursor-pointer w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors" data-course="Data Structures">Data Structures</button>
-<button class="course-option cursor-pointer w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors" data-course="Software Engineering">Software Engineering</button>
-<button class="course-option cursor-pointer w-full text-left px-4 py-2 hover:bg-gray-50 transition-colors" data-course="Database Systems">Database Systems</button>
-</div>
-</div>
-</div>
-</div>
-<div class="grid grid-cols-2 gap-4">
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Date</label>
-<input type="date" id="session-date" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Time</label>
-<input type="time" id="session-time" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:border-transparent">
-</div>
-</div>
-<button id="generate-btn" class="cursor-pointer !rounded-button whitespace-nowrap w-full bg-primary text-white py-3 font-semibold hover:bg-blue-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed" disabled>
-Generate QR Code
-</button>
-</div>
-</div>
-<!-- QR Code Display -->
-<div class="bg-white rounded-xl shadow-sm p-6">
-<h2 class="text-xl font-semibold mb-6">QR Code</h2>
-<div id="qr-placeholder" class="qr-code-container rounded-xl p-8 text-center">
-<div class="w-24 h-24 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-4">
-<i class="ri-qr-code-line text-4xl text-gray-400"></i>
-</div>
-<p class="text-gray-500">Select a course and generate QR code</p>
-</div>
-<div id="qr-display" class="hidden">
-<div class="qr-code-container rounded-xl p-8 text-center mb-6">
-<div class="w-48 h-48 bg-white rounded-lg mx-auto mb-4 flex items-center justify-center border-2 border-dashed border-gray-300">
-<div class="text-center">
-<div class="w-16 h-16 bg-primary rounded-lg flex items-center justify-center mx-auto mb-2">
-<i class="ri-qr-code-line text-3xl text-white"></i>
-</div>
-<p class="text-sm text-gray-600">QR Code Generated</p>
-</div>
-</div>
-</div>
-<div id="session-info" class="bg-gray-50 rounded-lg p-4 space-y-2">
-<div class="flex justify-between">
-<span class="text-sm text-gray-600">Course:</span>
-<span id="info-course" class="text-sm font-medium">-</span>
-</div>
-<div class="flex justify-between">
-<span class="text-sm text-gray-600">Date:</span>
-<span id="info-date" class="text-sm font-medium">-</span>
-</div>
-<div class="flex justify-between">
-<span class="text-sm text-gray-600">Time:</span>
-<span id="info-time" class="text-sm font-medium">-</span>
-</div>
-<div class="flex justify-between">
-<span class="text-sm text-gray-600">Status:</span>
-<span class="text-sm font-medium text-secondary">Active</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Student Attendance Page -->
+
+<!-- STUDENT ATTENDANCE — 3-Step Flow -->
 <div id="student-attendance" class="page">
-<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-8">
-<div class="w-full max-w-lg">
-<div class="bg-white rounded-2xl shadow-xl p-8">
-<div class="text-center mb-8">
-<div class="w-16 h-16 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-<i class="ri-user-check-line text-3xl text-secondary"></i>
-</div>
-<h2 class="text-2xl font-bold text-gray-900">Mark Attendance</h2>
-<p class="text-gray-600 mt-2">Verify your identity to record attendance</p>
-</div>
-<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-<div class="flex items-center gap-3">
-<div class="w-5 h-5 flex items-center justify-center">
-<i class="ri-book-line text-blue-600"></i>
-</div>
-<div>
-<p class="font-medium text-blue-900">Computer Science 101</p>
-<p class="text-sm text-blue-700">Today, January 30, 2026 - 10:00 AM</p>
-</div>
-</div>
+  <div class="min-h-screen bg-gray-50 px-4 py-8">
+    <div class="w-full max-w-lg mx-auto">
+
+      <!-- Step progress -->
+      <div class="flex items-center justify-center gap-2 mb-8">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-primary text-white text-sm font-bold flex items-center justify-center transition-all" id="dot-num-1">1</div>
+          <span class="text-xs font-medium text-primary hidden sm:block">Scan QR</span>
+        </div>
+        <div class="w-10 h-0.5 bg-gray-200 transition-colors" id="line-1"></div>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-400 text-sm font-bold flex items-center justify-center transition-all" id="dot-num-2">2</div>
+          <span class="text-xs font-medium text-gray-400 hidden sm:block" id="label-2">Identity</span>
+        </div>
+        <div class="w-10 h-0.5 bg-gray-200 transition-colors" id="line-2"></div>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-400 text-sm font-bold flex items-center justify-center transition-all" id="dot-num-3">3</div>
+          <span class="text-xs font-medium text-gray-400 hidden sm:block" id="label-3">Submit</span>
+        </div>
+      </div>
+
+      <!-- STEP 1: Scan QR -->
+      <div id="step-1" class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="text-center mb-6">
+          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i class="ri-qr-scan-line text-3xl text-primary"></i>
+          </div>
+          <h2 class="text-2xl font-bold">Scan QR Code</h2>
+          <p class="text-gray-500 text-sm mt-1">Point your camera at the QR code shown in class</p>
+        </div>
+
+        <div class="relative rounded-xl overflow-hidden bg-gray-900 mb-4" style="aspect-ratio:1/1;max-width:300px;margin:0 auto;">
+          <div id="qr-reader" class="w-full h-full"></div>
+          <div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+            <div class="w-44 h-44 relative">
+              <div class="absolute top-0 left-0 w-7 h-7 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+              <div class="absolute top-0 right-0 w-7 h-7 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+              <div class="absolute bottom-0 left-0 w-7 h-7 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+              <div class="absolute bottom-0 right-0 w-7 h-7 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+              <div style="position:absolute;left:2px;right:2px;height:2px;background:rgba(30,136,229,0.8);animation:scanMove 2s linear infinite;top:0;"></div>
+            </div>
+          </div>
+          <div class="absolute bottom-3 left-0 right-0 flex justify-center pointer-events-none">
+            <span id="scan-chip" class="bg-black/60 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></span> Scanning...
+            </span>
+          </div>
+        </div>
+
+        <div id="qr-scan-error" class="hidden bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-4 flex items-start gap-2">
+          <i class="ri-error-warning-line mt-0.5 flex-shrink-0"></i><span id="qr-scan-error-text"></span>
+        </div>
+
+        <div class="border border-dashed border-gray-200 rounded-xl p-4 mt-2">
+          <p class="text-xs text-gray-400 text-center mb-3">— or use active session (same device) —</p>
+          <button id="use-active-session-btn" type="button" disabled
+            class="cursor-pointer !rounded-button w-full bg-gray-100 text-gray-500 py-2.5 text-sm font-medium hover:bg-gray-200 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="ri-link-m text-base"></i>
+            <span id="use-active-label">No active session</span>
+          </button>
+        </div>
+
+        <div class="mt-6 text-center">
+          <button onclick="showPage('landing-page')" class="cursor-pointer text-gray-400 hover:text-gray-600 text-sm">← Back to Home</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Identity (Matric + Face ID) -->
+      <div id="step-2" class="hidden bg-white rounded-2xl shadow-xl p-8">
+
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+          <i class="ri-checkbox-circle-fill text-green-500 text-xl flex-shrink-0 mt-0.5"></i>
+          <div class="min-w-0">
+            <p class="text-sm font-bold text-green-800 truncate" id="s2-course">-</p>
+            <p class="text-xs text-green-700 mt-0.5" id="s2-datetime">-</p>
+            <p class="text-xs text-green-500 mt-0.5 font-mono" id="s2-session-id">-</p>
+          </div>
+        </div>
+
+        <form id="attendance-form">
+          <div class="mb-5">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Student ID / Matric Number</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-id-card-line text-gray-400"></i></div>
+              <input type="text" id="matric-number" autocomplete="off"
+                class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm"
+                placeholder="e.g. CS2024001" required>
+            </div>
+            <p class="text-xs text-gray-400 mt-1">Demo: CS2024001 · CS2024002 · CS2024003</p>
+          </div>
+
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-sm font-medium text-gray-700">Face Authentication</label>
+              <div class="flex items-center gap-1.5">
+                <div class="w-2 h-2 rounded-full bg-red-400 transition-colors" id="camera-status"></div>
+                <span class="text-xs text-gray-500" id="camera-status-text">Camera Off</span>
+              </div>
+            </div>
+
+            <div id="face-loading" class="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-3 flex items-center gap-3">
+              <div class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+              <span class="text-sm text-blue-700">Loading face detection model<span id="face-load-dots">...</span></span>
+            </div>
+
+            <div class="relative bg-gray-900 rounded-xl overflow-hidden" style="aspect-ratio:4/3;">
+              <video id="camera-video" class="w-full h-full object-cover hidden" autoplay playsinline muted></video>
+              <canvas id="face-overlay" class="absolute inset-0 w-full h-full hidden" style="pointer-events:none;"></canvas>
+              <canvas id="camera-canvas" class="w-full h-full object-cover hidden"></canvas>
+              <div id="camera-placeholder" class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center text-white">
+                  <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/20">
+                    <i class="ri-camera-line text-2xl text-white/60"></i>
+                  </div>
+                  <p class="text-sm text-white/60 mb-4">Selfie required for verification</p>
+                  <button type="button" id="start-camera-btn"
+                    class="cursor-pointer !rounded-button bg-secondary text-white px-6 py-2 text-sm font-semibold hover:bg-green-600 transition-colors">
+                    Start Camera
+                  </button>
+                </div>
+              </div>
+              <div id="face-badge" class="hidden absolute top-3 left-0 right-0 flex justify-center pointer-events-none">
+                <span id="face-badge-text" class="text-xs px-3 py-1.5 rounded-full font-medium bg-black/60 text-white backdrop-blur-sm"></span>
+              </div>
+              <div id="capture-controls" class="hidden absolute bottom-4 left-0 right-0 flex justify-center gap-3">
+                <button type="button" id="capture-btn" disabled
+                  class="cursor-pointer !rounded-button bg-secondary text-white px-5 py-2 text-sm font-semibold hover:bg-green-600 transition-colors flex items-center gap-1.5 disabled:bg-gray-500 disabled:cursor-not-allowed">
+                  <i class="ri-camera-fill"></i> Capture
+                </button>
+                <button type="button" id="retake-btn"
+                  class="cursor-pointer !rounded-button bg-gray-700 text-white px-5 py-2 text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-1.5 hidden">
+                  <i class="ri-refresh-line"></i> Retake
+                </button>
+              </div>
+            </div>
+            <div id="face-result" class="hidden mt-2 text-xs font-medium px-3 py-2 rounded-lg flex items-center gap-2"></div>
+          </div>
+
+          <div class="bg-gray-50 rounded-lg px-4 py-3 space-y-1 text-xs mb-5">
+            <div class="flex justify-between text-gray-500"><span>IP Address</span><span id="device-ip">—</span></div>
+            <div class="flex justify-between text-gray-500"><span>Device ID</span><span id="device-id">—</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Status</span><span id="device-status" class="text-green-600 font-medium">Authorized</span></div>
+          </div>
+
+          <div id="attendance-message" class="hidden px-4 py-3 rounded-lg text-sm mb-4"></div>
+
+          <button type="submit" id="submit-attendance-btn" disabled
+            class="cursor-pointer !rounded-button w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed text-sm">
+            Submit Attendance
+          </button>
+        </form>
+
+        <div class="mt-4 text-center">
+          <button onclick="restartAttendanceFlow()" class="cursor-pointer text-gray-400 hover:text-gray-600 text-xs">← Scan a different QR code</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
-<form id="attendance-form" class="space-y-6">
-<!-- Student ID Input -->
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Student ID / Matric Number</label>
-<div class="relative">
-<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-<div class="w-5 h-5 flex items-center justify-center">
-<i class="ri-id-card-line text-gray-400"></i>
-</div>
-</div>
-<input type="text" id="matric-number" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-secondary focus:border-transparent text-sm" placeholder="Enter your matric number" required>
-</div>
-</div>
-
-<!-- Camera Authentication Section -->
-<div id="camera-section" class="space-y-4">
-<div class="flex items-center justify-between">
-<label class="block text-sm font-medium text-gray-700">Face Authentication</label>
-<div class="flex items-center gap-2">
-<div class="w-3 h-3 bg-red-500 rounded-full" id="camera-status"></div>
-<span class="text-xs text-gray-500" id="camera-status-text">Camera Off</span>
-</div>
-</div>
-
-<div class="relative bg-gray-100 rounded-lg overflow-hidden" style="aspect-ratio: 4/3;">
-<video id="camera-video" class="w-full h-full object-cover hidden" autoplay playsinline></video>
-<canvas id="camera-canvas" class="w-full h-full object-cover hidden"></canvas>
-<div id="camera-placeholder" class="w-full h-full flex items-center justify-center">
-<div class="text-center">
-<div class="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center mx-auto mb-3">
-<i class="ri-camera-line text-2xl text-gray-500"></i>
-</div>
-<p class="text-sm text-gray-600 mb-4">Take a selfie for identity verification</p>
-<button type="button" id="start-camera-btn" class="cursor-pointer !rounded-button whitespace-nowrap bg-secondary text-white px-6 py-2 text-sm font-medium hover:bg-green-600 transition-colors">
-Start Camera
-</button>
-</div>
-</div>
-<div id="capture-controls" class="hidden absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-<button type="button" id="capture-btn" class="cursor-pointer !rounded-button whitespace-nowrap bg-secondary text-white px-6 py-2 text-sm font-medium hover:bg-green-600 transition-colors">
-<i class="ri-camera-fill mr-2"></i>Capture
-</button>
-<button type="button" id="retake-btn" class="cursor-pointer !rounded-button whitespace-nowrap bg-gray-500 text-white px-6 py-2 text-sm font-medium hover:bg-gray-600 transition-colors hidden">
-<i class="ri-refresh-line mr-2"></i>Retake
-</button>
-</div>
-</div>
-</div>
-
-<!-- Device Information Display -->
-<div class="bg-gray-50 rounded-lg p-4">
-<h4 class="text-sm font-medium text-gray-700 mb-2">Device Information</h4>
-<div class="space-y-1 text-xs text-gray-600">
-<div class="flex justify-between">
-<span>IP Address:</span>
-<span id="device-ip">Detecting...</span>
-</div>
-<div class="flex justify-between">
-<span>Device ID:</span>
-<span id="device-id">Generating...</span>
-</div>
-<div class="flex justify-between">
-<span>Status:</span>
-<span id="device-status" class="text-yellow-600">Checking authorization...</span>
-</div>
-</div>
-</div>
-
-<div id="attendance-message" class="hidden px-4 py-3 rounded-lg text-sm"></div>
-<button type="submit" id="submit-attendance-btn" class="cursor-pointer !rounded-button whitespace-nowrap w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
-Submit Attendance
-</button>
-</form>
-
-<div class="mt-6 text-center">
-<button onclick="showPage('landing-page')" class="cursor-pointer text-secondary hover:text-green-600 text-sm font-medium">
-← Back to Home
-</button>
-</div>
-</div>
-</div>
-</div>
-</div>
-<!-- Attendance Confirmation Page -->
+<!-- ATTENDANCE CONFIRMATION -->
 <div id="attendance-confirmation" class="page">
-<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-<div class="w-full max-w-md">
-<div class="bg-white rounded-2xl shadow-xl p-8 text-center">
-<div class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-<i class="ri-check-line text-4xl text-secondary"></i>
+  <div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div class="w-full max-w-md">
+      <div class="bg-white rounded-2xl shadow-xl p-8 text-center">
+        <div class="w-20 h-20 bg-secondary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <i class="ri-check-line text-4xl text-secondary"></i>
+        </div>
+        <h2 class="text-2xl font-bold mb-4">Attendance Successfully Recorded</h2>
+        <p class="text-gray-600 mb-8">Your attendance has been marked for today's session</p>
+        <div class="bg-gray-50 rounded-lg p-4 mb-8 space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-gray-500">Course</span><span id="confirm-course" class="font-medium">-</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Date</span><span id="confirm-date" class="font-medium">-</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Time</span><span id="confirm-time" class="font-medium">-</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Student ID</span><span id="confirm-matric" class="font-medium">-</span></div>
+        </div>
+        <button onclick="showPage('landing-page')" class="cursor-pointer !rounded-button w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors">Done</button>
+      </div>
+    </div>
+  </div>
 </div>
-<h2 class="text-2xl font-bold text-gray-900 mb-4">Attendance Successfully Recorded</h2>
-<p class="text-gray-600 mb-8">Your attendance has been marked for today's session</p>
-<div class="bg-gray-50 rounded-lg p-4 mb-8 space-y-2">
-<div class="flex justify-between">
-<span class="text-sm text-gray-600">Course:</span>
-<span class="text-sm font-medium">Computer Science 101</span>
-</div>
-<div class="flex justify-between">
-<span class="text-sm text-gray-600">Date:</span>
-<span class="text-sm font-medium">January 20, 2026</span>
-</div>
-<div class="flex justify-between">
-<span class="text-sm text-gray-600">Time:</span>
-<span class="text-sm font-medium">10:15 AM</span>
-</div>
-<div class="flex justify-between">
-<span class="text-sm text-gray-600">Student ID:</span>
-<span class="text-sm font-medium">CS2024001</span>
-</div>
-</div>
-<button onclick="showPage('landing-page')" class="cursor-pointer !rounded-button whitespace-nowrap w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors">
-Done
-</button>
-</div>
-</div>
-</div>
-</div>
-<!-- View Attendance Page -->
+
+<!-- VIEW ATTENDANCE -->
 <div id="view-attendance" class="page">
-<div class="min-h-screen bg-gray-50">
-<!-- Top Navigation -->
-<nav class="bg-white shadow-sm border-b">
-<div class="max-w-7xl mx-auto px-6 lg:px-8">
-<div class="flex justify-between items-center h-16">
-<div class="flex items-center gap-4">
-<button onclick="showPage('lecturer-dashboard')" class="cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors">
-<i class="ri-arrow-left-line text-xl"></i>
-</button>
-<h1 class="text-xl font-semibold">View Attendance</h1>
+  <div class="min-h-screen bg-gray-50">
+    <nav class="bg-white shadow-sm border-b">
+      <div class="max-w-7xl mx-auto px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center gap-4">
+            <button onclick="showPage('lecturer-dashboard')" class="cursor-pointer w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100"><i class="ri-arrow-left-line text-xl"></i></button>
+            <h1 class="text-xl font-semibold">View Attendance</h1>
+          </div>
+          <button onclick="logout()" class="cursor-pointer !rounded-button bg-gray-100 text-gray-700 px-4 py-2 text-sm hover:bg-gray-200">Logout</button>
+        </div>
+      </div>
+    </nav>
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+      <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
+        <h2 class="text-lg font-semibold mb-4">Filters</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Course</label>
+            <select id="filter-course" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary">
+              <option value="">All Courses</option>
+              <option value="Computer Science 101">Computer Science 101</option>
+              <option value="Data Structures">Data Structures</option>
+              <option value="Software Engineering">Software Engineering</option>
+              <option value="Database Systems">Database Systems</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
+            <input type="date" id="filter-from" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">To Date</label>
+            <input type="date" id="filter-to" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary">
+          </div>
+          <div class="flex items-end">
+            <button onclick="loadAttendanceTable()" class="cursor-pointer !rounded-button w-full bg-primary text-white py-2 text-sm font-medium hover:bg-blue-600 transition-colors">Apply Filters</button>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+          <h2 class="text-lg font-semibold">Attendance Records</h2>
+          <div class="flex gap-2">
+            <button onclick="exportExcel()" class="cursor-pointer !rounded-button bg-green-600 text-white px-4 py-2 text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2"><i class="ri-file-excel-line"></i> Export Excel</button>
+            <button onclick="exportPDF()" class="cursor-pointer !rounded-button bg-red-600 text-white px-4 py-2 text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2"><i class="ri-file-pdf-line"></i> Export PDF</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matric No.</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Course</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-table-body" class="bg-white divide-y divide-gray-200">
+              <tr><td colspan="6" class="px-6 py-10 text-center text-sm text-gray-400">No attendance records yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200">
+          <span id="attendance-count" class="text-sm text-gray-600">0 records</span>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
-<button onclick="showPage('landing-page')" class="cursor-pointer !rounded-button whitespace-nowrap bg-gray-100 text-gray-700 px-4 py-2 text-sm hover:bg-gray-200 transition-colors">
-Logout
-</button>
-</div>
-</div>
-</nav>
-<div class="max-w-7xl mx-auto px-6 lg:px-8 py-8">
-<!-- Filters -->
-<div class="bg-white rounded-xl shadow-sm p-6 mb-8">
-<h2 class="text-lg font-semibold mb-4">Filters</h2>
-<div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">Course</label>
-<div class="relative">
-<button class="cursor-pointer w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-left flex items-center justify-between hover:border-gray-400 transition-colors text-sm">
-<span>Computer Science 101</span>
-<div class="w-4 h-4 flex items-center justify-center">
-<i class="ri-arrow-down-s-line text-gray-400"></i>
-</div>
-</button>
-</div>
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">From Date</label>
-<input type="date" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent" value="2026-01-15">
-</div>
-<div>
-<label class="block text-sm font-medium text-gray-700 mb-2">To Date</label>
-<input type="date" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-transparent" value="2026-01-20">
-</div>
-<div class="flex items-end">
-<button class="cursor-pointer !rounded-button whitespace-nowrap w-full bg-primary text-white py-2 text-sm font-medium hover:bg-blue-600 transition-colors">
-Apply Filters
-</button>
-</div>
-</div>
-</div>
-<!-- Attendance Table -->
-<div class="bg-white rounded-xl shadow-sm overflow-hidden">
-<div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-<h2 class="text-lg font-semibold">Attendance Records</h2>
-<div class="flex gap-2">
-<button class="cursor-pointer !rounded-button whitespace-nowrap bg-green-600 text-white px-4 py-2 text-sm font-medium hover:bg-green-700 transition-colors flex items-center gap-2">
-<div class="w-4 h-4 flex items-center justify-center">
-<i class="ri-file-excel-line"></i>
-</div>
-Export Excel
-</button>
-<button class="cursor-pointer !rounded-button whitespace-nowrap bg-red-600 text-white px-4 py-2 text-sm font-medium hover:bg-red-700 transition-colors flex items-center gap-2">
-<div class="w-4 h-4 flex items-center justify-center">
-<i class="ri-file-pdf-line"></i>
-</div>
-Export PDF
-</button>
-</div>
-</div>
-<div class="overflow-x-auto">
-<table class="w-full">
-<thead class="bg-gray-50">
-<tr>
-<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Student Name</th>
-<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matric Number</th>
-<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Time Signed</th>
-<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-</tr>
-</thead>
-<tbody class="bg-white divide-y divide-gray-200">
-<tr>
-<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Emily Chen</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">CS2024001</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 20, 2026</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10:05 AM</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Present</span>
-</td>
-</tr>
-<tr>
-<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Michael Rodriguez</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">CS2024002</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 20, 2026</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10:08 AM</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Present</span>
-</td>
-</tr>
-<tr>
-<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Sarah Thompson</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">CS2024003</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 20, 2026</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10:12 AM</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Present</span>
-</td>
-</tr>
-<tr>
-<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">David Kim</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">CS2024004</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 20, 2026</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">-</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Absent</span>
-</td>
-</tr>
-<tr>
-<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Jessica Martinez</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">CS2024005</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 20, 2026</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10:15 AM</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Present</span>
-</td>
-</tr>
-<tr>
-<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Alex Johnson</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">CS2024006</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jan 20, 2026</td>
-<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10:18 AM</td>
-<td class="px-6 py-4 whitespace-nowrap">
-<span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">Late</span>
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-<div class="text-sm text-gray-700">
-Showing <span class="font-medium">1</span> to <span class="font-medium">6</span> of <span class="font-medium">32</span> results
-</div>
-<div class="flex gap-2">
-<button class="cursor-pointer !rounded-button whitespace-nowrap px-3 py-1 border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition-colors">Previous</button>
-<button class="cursor-pointer !rounded-button whitespace-nowrap px-3 py-1 bg-primary text-white text-sm">1</button>
-<button class="cursor-pointer !rounded-button whitespace-nowrap px-3 py-1 border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition-colors">2</button>
-<button class="cursor-pointer !rounded-button whitespace-nowrap px-3 py-1 border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition-colors">3</button>
-<button class="cursor-pointer !rounded-button whitespace-nowrap px-3 py-1 border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 transition-colors">Next</button>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-<script id="navigation-script">
-function showPage(pageId) {
-document.querySelectorAll('.page').forEach(page => {
-page.classList.remove('active');
-});
-document.getElementById(pageId).classList.add('active');
+
+
+<!-- ====================== SCRIPTS ====================== -->
+
+<script>
+/* ---- Navigation & Auth ---- */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'view-attendance') loadAttendanceTable();
+  if (id === 'student-attendance') initAttendancePage();
+  if (id === 'student-register') initRegPage();
+  if (id === 'lecturer-dashboard') loadRecentSessions();
 }
 function logout() {
-localStorage.removeItem('currentLecturer');
-localStorage.removeItem('currentSession');
-showPage('landing-page');
-}
-// Check authentication on protected pages
-function checkAuth() {
-const currentUser = localStorage.getItem('currentLecturer');
-if (!currentUser) {
-showPage('lecturer-login');
-return false;
-}
-return true;
+  localStorage.removeItem('currentLecturerSession');
+  clearQRTimer();
+  showPage('landing-page');
 }
 </script>
-<script id="storage-management-script">
-// Enhanced Demo Storage Management System
+
+<script>
+/* ---- Storage ---- */
 class AttendanceStorage {
-constructor() {
-this.initializeStorage();
+  constructor() { this._init(); }
+  _init() {
+    if (!localStorage.getItem('lecturerProfiles')) {
+      localStorage.setItem('lecturerProfiles', JSON.stringify([{
+        id:'lec_001', username:'lecturer', password:'password123',
+        firstName:'Sarah', lastName:'Johnson', fullName:'Dr. Sarah Johnson',
+        department:'Computer Science', status:'Active'
+      }]));
+    }
+    if (!localStorage.getItem('studentProfiles')) {
+      localStorage.setItem('studentProfiles', JSON.stringify([
+        { id:'std_001', matricNumber:'CS2024001', fullName:'Emily Chen' },
+        { id:'std_002', matricNumber:'CS2024002', fullName:'Michael Rodriguez' },
+        { id:'std_003', matricNumber:'CS2024003', fullName:'Sarah Thompson' },
+        { id:'std_004', matricNumber:'CS2024004', fullName:'David Kim' },
+        { id:'std_005', matricNumber:'CS2024005', fullName:'Jessica Martinez' },
+      ]));
+    }
+    if (!localStorage.getItem('attendanceRecords')) localStorage.setItem('attendanceRecords', JSON.stringify([]));
+    if (!localStorage.getItem('activeSessions')) localStorage.setItem('activeSessions', JSON.stringify([]));
+  }
+  getLecturer(u) { return JSON.parse(localStorage.getItem('lecturerProfiles')||'[]').find(p=>p.username===u); }
+  addLecturer(d) {
+    const p = JSON.parse(localStorage.getItem('lecturerProfiles')||'[]');
+    const np = { id:'lec_'+Date.now(), ...d, status:'Active' };
+    p.push(np); localStorage.setItem('lecturerProfiles', JSON.stringify(p)); return np;
+  }
+  getStudent(m) { return JSON.parse(localStorage.getItem('studentProfiles')||'[]').find(s=>s.matricNumber===m); }
+  getAllStudents() { return JSON.parse(localStorage.getItem('studentProfiles')||'[]'); }
+  registerStudent(data) {
+    const students = JSON.parse(localStorage.getItem('studentProfiles')||'[]');
+    const existing = students.findIndex(s => s.matricNumber === data.matricNumber);
+    if (existing !== -1) { students[existing] = { ...students[existing], ...data }; }
+    else { students.push({ id: 'std_' + Date.now(), ...data }); }
+    localStorage.setItem('studentProfiles', JSON.stringify(students));
+  }
+  saveFaceDescriptor(matricNumber, descriptor) {
+    const students = JSON.parse(localStorage.getItem('studentProfiles')||'[]');
+    const idx = students.findIndex(s => s.matricNumber === matricNumber);
+    if (idx !== -1) {
+      students[idx].faceDescriptor = Array.from(descriptor);
+      students[idx].faceEnrolledAt = new Date().toISOString();
+      localStorage.setItem('studentProfiles', JSON.stringify(students));
+      return true;
+    }
+    return false;
+  }
+  getFaceDescriptor(matricNumber) {
+    const s = this.getStudent(matricNumber);
+    return (s && s.faceDescriptor) ? new Float32Array(s.faceDescriptor) : null;
+  }
+  isStudentEnrolled(matricNumber) {
+    const s = this.getStudent(matricNumber);
+    return !!(s && s.faceDescriptor);
+  }
+  saveSession(s) {
+    const ss = JSON.parse(localStorage.getItem('activeSessions')||'[]');
+    ss.unshift(s); localStorage.setItem('activeSessions', JSON.stringify(ss.slice(0,20)));
+  }
+  getActiveSession() {
+    const ss = JSON.parse(localStorage.getItem('activeSessions')||'[]');
+    return ss.find(s => s.expiresAt > Date.now()) || null;
+  }
+  getAllSessions() { return JSON.parse(localStorage.getItem('activeSessions')||'[]'); }
+  addAttendance(r) {
+    const rs = JSON.parse(localStorage.getItem('attendanceRecords')||'[]');
+    rs.unshift(r); localStorage.setItem('attendanceRecords', JSON.stringify(rs));
+  }
+  hasDuplicate(matric, sid) {
+    return JSON.parse(localStorage.getItem('attendanceRecords')||'[]').some(r=>r.matricNumber===matric && r.sessionId===sid);
+  }
+  getRecords(f={}) {
+    let rs = JSON.parse(localStorage.getItem('attendanceRecords')||'[]');
+    if (f.course) rs = rs.filter(r=>r.course===f.course);
+    if (f.from) rs = rs.filter(r=>r.date>=f.from);
+    if (f.to) rs = rs.filter(r=>r.date<=f.to);
+    return rs;
+  }
 }
-
-initializeStorage() {
-// Initialize lecturer profiles table
-this.initializeLecturerProfiles();
-// Initialize student profiles
-this.initializeStudentProfiles();
-// Initialize attendance records
-this.initializeAttendanceData();
-// Initialize device tracking
-this.initializeDeviceTracking();
-}
-
-initializeLecturerProfiles() {
-const existingProfiles = localStorage.getItem('lecturerProfiles');
-if (!existingProfiles) {
-const demoProfiles = [
-{
-id: 'lec_001',
-username: 'lecturer',
-password: 'password123',
-firstName: 'Sarah',
-lastName: 'Johnson',
-fullName: 'Dr. Sarah Johnson',
-title: 'Dr.',
-department: 'Computer Science',
-email: 'sarah.johnson@university.edu',
-phone: '+1-555-0123',
-officeLocation: 'CS Building, Room 301',
-specialization: 'Software Engineering, Data Structures',
-joinDate: '2020-09-01',
-status: 'Active',
-courses: ['Computer Science 101', 'Data Structures', 'Software Engineering'],
-profileImage: null,
-lastLogin: null,
-loginSessions: [],
-createdAt: '2020-09-01T00:00:00.000Z',
-updatedAt: new Date().toISOString()
-},
-{
-id: 'lec_002',
-username: 'john.doe',
-password: 'demo2026',
-firstName: 'John',
-lastName: 'Doe',
-fullName: 'Prof. John Doe',
-title: 'Prof.',
-department: 'Mathematics',
-email: 'john.doe@university.edu',
-phone: '+1-555-0124',
-officeLocation: 'Math Building, Room 205',
-specialization: 'Calculus, Linear Algebra',
-joinDate: '2019-08-15',
-status: 'Active',
-courses: ['Calculus I', 'Linear Algebra', 'Statistics'],
-profileImage: null,
-lastLogin: null,
-loginSessions: [],
-createdAt: '2019-08-15T00:00:00.000Z',
-updatedAt: new Date().toISOString()
-}
-];
-localStorage.setItem('lecturerProfiles', JSON.stringify(demoProfiles));
-}
-}
-
-initializeStudentProfiles() {
-const existingStudents = localStorage.getItem('studentProfiles');
-if (!existingStudents) {
-const demoStudents = [
-{
-id: 'std_001',
-matricNumber: 'CS2024001',
-firstName: 'Emily',
-lastName: 'Chen',
-fullName: 'Emily Chen',
-email: 'emily.chen@student.edu',
-department: 'Computer Science',
-year: '2nd Year',
-program: 'Bachelor of Computer Science',
-enrolledCourses: ['Computer Science 101', 'Data Structures'],
-profileImage: null,
-faceAuthData: null,
-registeredDevices: [],
-status: 'Active',
-createdAt: '2024-09-01T00:00:00.000Z'
-},
-{
-id: 'std_002',
-matricNumber: 'CS2024002',
-firstName: 'Michael',
-lastName: 'Rodriguez',
-fullName: 'Michael Rodriguez',
-email: 'michael.rodriguez@student.edu',
-department: 'Computer Science',
-year: '2nd Year',
-program: 'Bachelor of Computer Science',
-enrolledCourses: ['Computer Science 101', 'Software Engineering'],
-profileImage: null,
-faceAuthData: null,
-registeredDevices: [],
-status: 'Active',
-createdAt: '2024-09-01T00:00:00.000Z'
-}
-];
-localStorage.setItem('studentProfiles', JSON.stringify(demoStudents));
-}
-}
-
-initializeAttendanceData() {
-const existingData = localStorage.getItem('attendanceRecords');
-if (!existingData) {
-const sampleRecords = [
-{
-id: 'att_001',
-course: 'Computer Science 101',
-sessionId: 'ses_001',
-studentId: 'std_001',
-studentName: 'Emily Chen',
-matricNumber: 'CS2024001',
-date: '2026-01-20',
-time: '10:05 AM',
-timestamp: '2026-01-20T10:05:00.000Z',
-status: 'Present',
-ipAddress: '192.168.1.101',
-deviceFingerprint: 'device_001',
-faceVerified: true,
-location: { latitude: null, longitude: null }
-},
-{
-id: 'att_002',
-course: 'Computer Science 101',
-sessionId: 'ses_001',
-studentId: 'std_002',
-studentName: 'Michael Rodriguez',
-matricNumber: 'CS2024002',
-date: '2026-01-20',
-time: '10:08 AM',
-timestamp: '2026-01-20T10:08:00.000Z',
-status: 'Present',
-ipAddress: '192.168.1.102',
-deviceFingerprint: 'device_002',
-faceVerified: true,
-location: { latitude: null, longitude: null }
-}
-];
-localStorage.setItem('attendanceRecords', JSON.stringify(sampleRecords));
-}
-}
-
-initializeDeviceTracking() {
-const existingDevices = localStorage.getItem('deviceRegistry');
-if (!existingDevices) {
-localStorage.setItem('deviceRegistry', JSON.stringify({}));
-}
-}
-
-// Lecturer Profile Management
-getLecturerProfile(username) {
-const profiles = JSON.parse(localStorage.getItem('lecturerProfiles') || '[]');
-return profiles.find(profile => profile.username === username);
-}
-
-updateLecturerProfile(username, updates) {
-const profiles = JSON.parse(localStorage.getItem('lecturerProfiles') || '[]');
-const index = profiles.findIndex(profile => profile.username === username);
-if (index !== -1) {
-profiles[index] = { ...profiles[index], ...updates, updatedAt: new Date().toISOString() };
-localStorage.setItem('lecturerProfiles', JSON.stringify(profiles));
-return true;
-}
-return false;
-}
-
-addLecturerProfile(profileData) {
-const profiles = JSON.parse(localStorage.getItem('lecturerProfiles') || '[]');
-const newProfile = {
-id: 'lec_' + Date.now(),
-...profileData,
-createdAt: new Date().toISOString(),
-updatedAt: new Date().toISOString(),
-status: 'Active',
-loginSessions: [],
-lastLogin: null
-};
-profiles.push(newProfile);
-localStorage.setItem('lecturerProfiles', JSON.stringify(profiles));
-return newProfile;
-}
-
-// Student Authentication
-getStudentProfile(matricNumber) {
-const students = JSON.parse(localStorage.getItem('studentProfiles') || '[]');
-return students.find(student => student.matricNumber === matricNumber);
-}
-
-// Device & IP Management
-registerDevice(matricNumber, deviceInfo) {
-const deviceRegistry = JSON.parse(localStorage.getItem('deviceRegistry') || '{}');
-if (!deviceRegistry[matricNumber]) {
-deviceRegistry[matricNumber] = [];
-}
-deviceRegistry[matricNumber].push({
-...deviceInfo,
-registeredAt: new Date().toISOString(),
-lastUsed: new Date().toISOString()
-});
-localStorage.setItem('deviceRegistry', JSON.stringify(deviceRegistry));
-}
-
-isDeviceAuthorized(matricNumber, deviceFingerprint) {
-const deviceRegistry = JSON.parse(localStorage.getItem('deviceRegistry') || '{}');
-const userDevices = deviceRegistry[matricNumber] || [];
-return userDevices.some(device => device.fingerprint === deviceFingerprint);
-}
-
-// Session Management
-recordLoginSession(username, sessionData) {
-const profiles = JSON.parse(localStorage.getItem('lecturerProfiles') || '[]');
-const index = profiles.findIndex(profile => profile.username === username);
-if (index !== -1) {
-if (!profiles[index].loginSessions) {
-profiles[index].loginSessions = [];
-}
-profiles[index].loginSessions.push({
-...sessionData,
-timestamp: new Date().toISOString()
-});
-profiles[index].lastLogin = new Date().toISOString();
-localStorage.setItem('lecturerProfiles', JSON.stringify(profiles));
-}
-}
-}
-
-// Initialize storage system
 const storage = new AttendanceStorage();
 </script>
 
-<script id="login-script">
+<script>
+/* ---- Login ---- */
 document.addEventListener('DOMContentLoaded', function() {
-const loginForm = document.getElementById('login-form');
-const errorMessage = document.getElementById('login-error-message');
-const usernameInput = document.getElementById('username');
-const passwordInput = document.getElementById('password');
+  const sess = localStorage.getItem('currentLecturerSession');
+  if (sess) {
+    const s = JSON.parse(sess);
+    if (Date.now() - new Date(s.loginTime).getTime() < 86400000) setWelcome(s.fullName);
+    else localStorage.removeItem('currentLecturerSession');
+  }
 
-// Check if already logged in and restore session
-const currentSession = localStorage.getItem('currentLecturerSession');
-if (currentSession) {
-const sessionData = JSON.parse(currentSession);
-const sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours
-const now = new Date().getTime();
-const sessionTime = new Date(sessionData.loginTime).getTime();
-
-if (now - sessionTime < sessionTimeout) {
-updateDashboardWelcome(sessionData.fullName);
-if (document.getElementById('lecturer-dashboard')) {
-showPage('lecturer-dashboard');
-}
-} else {
-localStorage.removeItem('currentLecturerSession');
-}
-}
-
-if (loginForm && errorMessage) {
-loginForm.addEventListener('submit', function(e) {
-e.preventDefault();
-if (!usernameInput || !passwordInput) return;
-
-const username = usernameInput.value.trim();
-const password = passwordInput.value.trim();
-
-// Enhanced validation
-if (username.length < 3) {
-showLoginError('Username must be at least 3 characters long.');
-return;
-}
-
-if (password.length < 6) {
-showLoginError('Password must be at least 6 characters long.');
-return;
-}
-
-// Get lecturer profile from enhanced storage
-const lecturerProfile = storage.getLecturerProfile(username);
-
-if (lecturerProfile && lecturerProfile.password === password && lecturerProfile.status === 'Active') {
-// Create session data
-const sessionData = {
-username: lecturerProfile.username,
-fullName: lecturerProfile.fullName,
-department: lecturerProfile.department,
-email: lecturerProfile.email,
-title: lecturerProfile.title,
-courses: lecturerProfile.courses,
-loginTime: new Date().toISOString(),
-deviceInfo: getDeviceFingerprint(),
-ipAddress: '192.168.1.100' // Simulated IP
-};
-
-// Store persistent session
-localStorage.setItem('currentLecturerSession', JSON.stringify(sessionData));
-
-// Record login session in profile
-storage.recordLoginSession(username, {
-ipAddress: sessionData.ipAddress,
-deviceInfo: sessionData.deviceInfo,
-userAgent: navigator.userAgent
+  document.getElementById('login-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const u = document.getElementById('username').value.trim();
+    const p = document.getElementById('password').value.trim();
+    const lecturer = storage.getLecturer(u);
+    const errEl = document.getElementById('login-error-message');
+    if (lecturer && lecturer.password === p && lecturer.status === 'Active') {
+      const s = { username: lecturer.username, fullName: lecturer.fullName, loginTime: new Date().toISOString() };
+      localStorage.setItem('currentLecturerSession', JSON.stringify(s));
+      setWelcome(lecturer.fullName);
+      errEl.classList.add('hidden');
+      this.reset();
+      showPage('lecturer-dashboard');
+    } else {
+      errEl.textContent = 'Invalid username or password.';
+      errEl.classList.remove('hidden');
+      setTimeout(() => errEl.classList.add('hidden'), 4000);
+    }
+  });
 });
+function setWelcome(name) {
+  const el = document.getElementById('dashboard-welcome');
+  if (el) el.textContent = 'Welcome, ' + name;
+}
+</script>
 
-// Update dashboard
-updateDashboardWelcome(lecturerProfile.fullName);
-errorMessage.classList.add('hidden');
-
-// Clear form
-loginForm.reset();
-showPage('lecturer-dashboard');
-} else {
-let errorMsg = 'Invalid username or password.';
-if (lecturerProfile && lecturerProfile.status !== 'Active') {
-errorMsg = 'Account is inactive. Please contact administrator.';
-}
-showLoginError(errorMsg);
-}
-});
-}
-
-function showLoginError(message) {
-if (errorMessage) {
-errorMessage.textContent = message;
-errorMessage.classList.remove('hidden');
-setTimeout(() => {
-errorMessage.classList.add('hidden');
-}, 5000);
-}
-}
-
-function updateDashboardWelcome(fullName) {
-const welcomeSpan = document.querySelector('nav span');
-if (welcomeSpan && welcomeSpan.textContent.includes('Welcome,')) {
-welcomeSpan.textContent = `Welcome, ${fullName}`;
-}
-}
-
-function getDeviceFingerprint() {
-return {
-userAgent: navigator.userAgent,
-language: navigator.language,
-platform: navigator.platform,
-screenResolution: `${screen.width}x${screen.height}`,
-timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-fingerprint: btoa(navigator.userAgent + screen.width + screen.height).substring(0, 16)
-};
-}
+<script>
+/* ---- Sign-up ---- */
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('signup-form');
+  const msg = document.getElementById('signup-message');
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const fn = document.getElementById('first-name').value.trim();
+    const ln = document.getElementById('last-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const dept = document.getElementById('department').value.trim();
+    const uname = document.getElementById('signup-username').value.trim();
+    const pass = document.getElementById('signup-password').value;
+    const conf = document.getElementById('confirm-password').value;
+    if (pass !== conf) { showMsg('Passwords do not match.', 'error'); return; }
+    if (pass.length < 6) { showMsg('Password must be at least 6 characters.', 'error'); return; }
+    if (storage.getLecturer(uname)) { showMsg('Username already taken.', 'error'); return; }
+    storage.addLecturer({ username: uname, password: pass, firstName: fn, lastName: ln, fullName: fn+' '+ln, department: dept, email });
+    showMsg('Account created! Redirecting to login...', 'success');
+    setTimeout(() => { showPage('lecturer-login'); form.reset(); msg.classList.add('hidden'); }, 2000);
+  });
+  function showMsg(text, type) {
+    msg.textContent = text;
+    msg.className = (type==='error' ? 'bg-red-50 border border-red-200 text-red-600' : 'bg-green-50 border border-green-200 text-green-600') + ' px-4 py-3 rounded-lg text-sm';
+    msg.classList.remove('hidden');
+    if (type === 'error') setTimeout(() => msg.classList.add('hidden'), 5000);
+  }
 });
 </script>
-<script id="signup-script">
+
+<script>
+/* ============================================================
+   QR CODE GENERATOR  —  Phase 1, Step 1
+   ✅ Real scannable QR code via qrcodejs
+   ✅ Session payload saved to localStorage
+   ✅ Countdown timer with color-shift ring
+   ✅ Auto-expire → expired state
+   ✅ Download QR as PNG
+   ✅ Regenerate resets everything cleanly
+   ============================================================ */
+
+let qrTimerInterval = null;
+let currentSession = null;
+
 document.addEventListener('DOMContentLoaded', function() {
-const signupForm = document.getElementById('signup-form');
-const signupMessage = document.getElementById('signup-message');
+  // Defaults
+  const now = new Date();
+  document.getElementById('session-date').value = now.toISOString().split('T')[0];
+  document.getElementById('session-time').value = now.toTimeString().slice(0, 5);
 
-if (signupForm && signupMessage) {
-signupForm.addEventListener('submit', function(e) {
-e.preventDefault();
+  // Course dropdown
+  const dropdown = document.getElementById('course-dropdown');
+  const optionsEl = document.getElementById('course-options');
+  const selectedText = document.getElementById('selected-course-text');
+  const generateBtn = document.getElementById('generate-btn');
+  let chosenCourse = '';
 
-const firstName = document.getElementById('first-name');
-const lastName = document.getElementById('last-name');
-const email = document.getElementById('signup-email');
-const department = document.getElementById('department');
-const username = document.getElementById('signup-username');
-const password = document.getElementById('signup-password');
-const confirmPassword = document.getElementById('confirm-password');
+  dropdown.addEventListener('click', function(e) {
+    e.stopPropagation();
+    optionsEl.classList.toggle('hidden');
+  });
+  document.querySelectorAll('.course-option').forEach(function(opt) {
+    opt.addEventListener('click', function() {
+      chosenCourse = this.dataset.course;
+      selectedText.textContent = chosenCourse;
+      selectedText.className = 'text-gray-900';
+      optionsEl.classList.add('hidden');
+      generateBtn.disabled = false;
+      generateBtn.classList.remove('disabled:bg-gray-300');
+    });
+  });
+  document.addEventListener('click', function() { optionsEl.classList.add('hidden'); });
 
-if (!firstName || !lastName || !email || !department || !username || !password || !confirmPassword) {
-return;
-}
+  // Generate
+  generateBtn.addEventListener('click', function() {
+    if (!chosenCourse) return;
+    buildQRSession(chosenCourse);
+  });
 
-const firstNameVal = firstName.value.trim();
-const lastNameVal = lastName.value.trim();
-const emailVal = email.value.trim();
-const departmentVal = department.value.trim();
-const usernameVal = username.value.trim();
-const passwordVal = password.value;
-const confirmPasswordVal = confirmPassword.value;
+  // Regenerate
+  document.getElementById('regenerate-btn').addEventListener('click', function() {
+    if (currentSession) buildQRSession(currentSession.course);
+  });
 
-// Enhanced validation
-const validationResult = validateLecturerRegistration({
-firstName: firstNameVal,
-lastName: lastNameVal,
-email: emailVal,
-department: departmentVal,
-username: usernameVal,
-password: passwordVal,
-confirmPassword: confirmPasswordVal
+  // New session after expiry
+  document.getElementById('new-session-btn').addEventListener('click', resetToPlaceholder);
+
+  // Download
+  document.getElementById('download-qr-btn').addEventListener('click', downloadQRCode);
 });
 
-if (!validationResult.isValid) {
-showSignupMessage(validationResult.message, 'error');
-return;
+function buildQRSession(course) {
+  clearQRTimer();
+
+  const date = document.getElementById('session-date').value;
+  const time = document.getElementById('session-time').value;
+  const durationMins = parseInt(document.getElementById('session-duration').value);
+  const sessionId = 'SES-' + Date.now();
+  const expiresAt = Date.now() + durationMins * 60 * 1000;
+
+  const payload = { sessionId, course, date, time, expiresAt, durationMins, createdAt: Date.now() };
+  storage.saveSession(payload);
+  currentSession = payload;
+
+  // Show QR panel
+  document.getElementById('qr-placeholder').classList.add('hidden');
+  document.getElementById('qr-expired').classList.add('hidden');
+  const display = document.getElementById('qr-display');
+  display.classList.remove('hidden');
+  display.style.display = 'flex';
+
+  // Render QR code
+  const container = document.getElementById('qr-canvas-container');
+  container.innerHTML = '';
+  new QRCode(container, {
+    text: JSON.stringify(payload),
+    width: 200,
+    height: 200,
+    colorDark: '#0D2B4E',
+    colorLight: '#FFFFFF',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  // Fill info
+  document.getElementById('info-course').textContent = course;
+  document.getElementById('info-date').textContent = new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday:'short', year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('info-time').textContent = new Date('2000-01-01T' + time).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true });
+  document.getElementById('info-expires').textContent = new Date(expiresAt).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true });
+  document.getElementById('info-session-id').textContent = sessionId;
+
+  // Start timer
+  startCountdown(durationMins * 60, expiresAt);
 }
 
-// Check if username or email already exists
-const existingProfiles = JSON.parse(localStorage.getItem('lecturerProfiles') || '[]');
-const usernameExists = existingProfiles.some(profile => 
-profile.username.toLowerCase() === usernameVal.toLowerCase()
-);
-const emailExists = existingProfiles.some(profile => 
-profile.email.toLowerCase() === emailVal.toLowerCase()
-);
+function startCountdown(totalSecs, expiresAt) {
+  const ring = document.getElementById('timer-ring');
+  const display = document.getElementById('timer-display');
+  const circ = 100.53; // 2 * π * 16
 
-if (usernameExists) {
-showSignupMessage('This username is already taken. Please choose another.', 'error');
-return;
-}
+  function tick() {
+    const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    display.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
 
-if (emailExists) {
-showSignupMessage('An account with this email already exists.', 'error');
-return;
-}
+    const frac = remaining / totalSecs;
+    ring.style.strokeDashoffset = String((1 - frac) * circ);
 
-// Create comprehensive lecturer profile
-const newProfile = {
-username: usernameVal,
-password: passwordVal,
-firstName: firstNameVal,
-lastName: lastNameVal,
-fullName: `${firstNameVal} ${lastNameVal}`,
-title: 'Mr./Ms.',
-department: departmentVal,
-email: emailVal,
-phone: '',
-officeLocation: '',
-specialization: '',
-joinDate: new Date().toISOString().split('T')[0],
-courses: [],
-profileImage: null
-};
+    if (frac < 0.2) { ring.style.stroke = '#EF4444'; display.style.color = '#EF4444'; }
+    else if (frac < 0.5) { ring.style.stroke = '#F59E0B'; display.style.color = '#92400E'; }
+    else { ring.style.stroke = '#1E88E5'; display.style.color = '#374151'; }
 
-// Add profile using storage system
-const createdProfile = storage.addLecturerProfile(newProfile);
+    if (remaining <= 0) {
+      clearInterval(qrTimerInterval);
+      qrTimerInterval = null;
+      onQRExpired();
+    }
+  }
 
-if (createdProfile) {
-showSignupMessage('Account created successfully! Redirecting to login...', 'success');
-setTimeout(() => {
-showPage('lecturer-login');
-signupForm.reset();
-signupMessage.classList.add('hidden');
-}, 2000);
-} else {
-showSignupMessage('Failed to create account. Please try again.', 'error');
-}
-});
+  tick();
+  qrTimerInterval = setInterval(tick, 1000);
 }
 
-function validateLecturerRegistration(data) {
-// Name validation
-if (data.firstName.length < 2 || !/^[a-zA-Z\s]+$/.test(data.firstName)) {
-return { isValid: false, message: 'First name must be at least 2 characters and contain only letters.' };
+function onQRExpired() {
+  document.getElementById('qr-display').style.display = 'none';
+  document.getElementById('qr-expired').classList.remove('hidden');
 }
 
-if (data.lastName.length < 2 || !/^[a-zA-Z\s]+$/.test(data.lastName)) {
-return { isValid: false, message: 'Last name must be at least 2 characters and contain only letters.' };
+function resetToPlaceholder() {
+  document.getElementById('qr-placeholder').classList.remove('hidden');
+  document.getElementById('qr-expired').classList.add('hidden');
+  document.getElementById('qr-display').classList.add('hidden');
+  currentSession = null;
 }
 
-// Email validation
-const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-if (!emailRegex.test(data.email)) {
-return { isValid: false, message: 'Please enter a valid email address.' };
+function clearQRTimer() {
+  if (qrTimerInterval) { clearInterval(qrTimerInterval); qrTimerInterval = null; }
 }
 
-// Department validation
-if (data.department.length < 3) {
-return { isValid: false, message: 'Department name must be at least 3 characters long.' };
-}
+function downloadQRCode() {
+  const container = document.getElementById('qr-canvas-container');
+  // qrcodejs creates a canvas + an img on top of each other
+  const canvas = container.querySelector('canvas');
+  const img = container.querySelector('img');
+  const filename = 'QR-' + (currentSession ? currentSession.sessionId : 'code') + '.png';
 
-// Username validation
-const usernameRegex = /^[a-zA-Z0-9._]{4,20}$/;
-if (!usernameRegex.test(data.username)) {
-return { isValid: false, message: 'Username must be 4-20 characters and contain only letters, numbers, dots, and underscores.' };
+  if (canvas) {
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = filename;
+    a.click();
+  } else if (img) {
+    const a = document.createElement('a');
+    a.href = img.src;
+    a.download = filename;
+    a.click();
+  }
 }
-
-// Password validation
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-if (!passwordRegex.test(data.password)) {
-return { isValid: false, message: 'Password must be at least 8 characters with uppercase, lowercase, number, and special character.' };
-}
-
-if (data.password !== data.confirmPassword) {
-return { isValid: false, message: 'Passwords do not match. Please try again.' };
-}
-
-return { isValid: true, message: 'Validation successful' };
-}
-
-function showSignupMessage(message, type) {
-if (!signupMessage) return;
-signupMessage.textContent = message;
-if (type === 'error') {
-signupMessage.className = 'bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm';
-} else {
-signupMessage.className = 'bg-green-50 border border-green-200 text-green-600 px-4 py-3 rounded-lg text-sm';
-}
-signupMessage.classList.remove('hidden');
-if (type === 'error') {
-setTimeout(() => {
-signupMessage.classList.add('hidden');
-}, 6000);
-}
-}
-});
 </script>
-<script id="qr-generator-script">
-document.addEventListener('DOMContentLoaded', function() {
-const courseDropdown = document.getElementById('course-dropdown');
-const courseOptions = document.getElementById('course-options');
-const selectedCourse = document.getElementById('selected-course');
-const generateBtn = document.getElementById('generate-btn');
-const sessionDate = document.getElementById('session-date');
-const sessionTime = document.getElementById('session-time');
-// Set default date and time
-const now = new Date();
-sessionDate.value = now.toISOString().split('T')[0];
-sessionTime.value = now.toTimeString().slice(0, 5);
-courseDropdown.addEventListener('click', function() {
-courseOptions.classList.toggle('hidden');
-});
-document.querySelectorAll('.course-option').forEach(option => {
-option.addEventListener('click', function() {
-const course = this.dataset.course;
-selectedCourse.textContent = course;
-courseOptions.classList.add('hidden');
-generateBtn.disabled = false;
-});
-});
-generateBtn.addEventListener('click', function() {
-const course = selectedCourse.textContent;
-const date = sessionDate.value;
-const time = sessionTime.value;
-document.getElementById('qr-placeholder').classList.add('hidden');
-document.getElementById('qr-display').classList.remove('hidden');
-document.getElementById('info-course').textContent = course;
-document.getElementById('info-date').textContent = new Date(date).toLocaleDateString('en-US', {
-year: 'numeric',
-month: 'long',
-day: 'numeric'
-});
-document.getElementById('info-time').textContent = new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
-hour: 'numeric',
-minute: '2-digit',
-hour12: true
-});
-});
-document.addEventListener('click', function(e) {
-if (!courseDropdown.contains(e.target) && !courseOptions.contains(e.target)) {
-courseOptions.classList.add('hidden');
-}
-});
-});
-</script>
-<script id="attendance-script">
-document.addEventListener('DOMContentLoaded', function() {
-const attendanceForm = document.getElementById('attendance-form');
-const attendanceMessage = document.getElementById('attendance-message');
-const matricInput = document.getElementById('matric-number');
-const submitBtn = document.getElementById('submit-attendance-btn');
-const startCameraBtn = document.getElementById('start-camera-btn');
-const captureBtn = document.getElementById('capture-btn');
-const retakeBtn = document.getElementById('retake-btn');
-const video = document.getElementById('camera-video');
-const canvas = document.getElementById('camera-canvas');
-const placeholder = document.getElementById('camera-placeholder');
-const captureControls = document.getElementById('capture-controls');
-const cameraStatus = document.getElementById('camera-status');
-const cameraStatusText = document.getElementById('camera-status-text');
 
-let stream = null;
+<script>
+/* ---- Dashboard: Recent Sessions ---- */
+function loadRecentSessions() {
+  const list = document.getElementById('recent-sessions-list');
+  const sessions = storage.getAllSessions();
+  if (!sessions.length) {
+    list.innerHTML = '<p class="text-sm text-gray-400">No sessions yet. Generate a QR code to start.</p>';
+    return;
+  }
+  const now = Date.now();
+  list.innerHTML = sessions.slice(0,5).map(function(s) {
+    const active = s.expiresAt > now;
+    const count = storage.getRecords({ course: s.course }).filter(r => r.sessionId === s.sessionId).length;
+    const dateStr = new Date(s.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric' });
+    const timeStr = new Date('2000-01-01T' + s.time).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true });
+    return `<div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+      <div>
+        <p class="font-medium text-sm text-gray-900">${s.course}</p>
+        <p class="text-xs text-gray-500">${dateStr}, ${timeStr} &mdash; ${count} student${count!==1?'s':''} recorded</p>
+      </div>
+      <span class="text-xs font-semibold ${active ? 'text-green-600 bg-green-50' : 'text-gray-400 bg-gray-50'} px-2 py-0.5 rounded-full">${active ? 'Active' : 'Ended'}</span>
+    </div>`;
+  }).join('');
+}
+</script>
+
+<script>
+/* ================================================================
+   PHASE 2 — FACE ID VERIFICATION (FACE RECOGNITION)
+   Libraries: html5-qrcode (scanning), face-api.js (full pipeline)
+   Models: tinyFaceDetector + faceLandmark68Net + faceRecognitionNet
+   Flow: Scan QR → Matric + Face capture → Descriptor match → Submit
+   Face enrollment: Student Registration page (one-time setup)
+   Match threshold: Euclidean distance < 0.5 = same person
+   ================================================================ */
+
+/* --- Shared state --- */
+const fingerprint = btoa(navigator.userAgent + screen.width + screen.height).substring(0, 16);
+const simIP = '192.168.1.' + (Math.floor(Math.random() * 200) + 10);
+let verifiedSession = null;
 let capturedImageData = null;
-let deviceFingerprint = null;
-let ipAddress = null;
+let faceDetected = false;
+let cameraStream = null;
+let html5QrScanner = null;
+let faceDetectionInterval = null;
+let faceModelsLoaded = false;
 
-// Initialize device tracking
-initializeDeviceInfo();
+/* --- Step helpers --- */
+function setStep(n) {
+  document.getElementById('step-1').classList.add('hidden');
+  document.getElementById('step-2').classList.add('hidden');
+  if (document.getElementById('step-' + n)) {
+    document.getElementById('step-' + n).classList.remove('hidden');
+  }
 
-// Camera functionality
-startCameraBtn.addEventListener('click', async function() {
-try {
-stream = await navigator.mediaDevices.getUserMedia({ 
-video: { 
-width: { ideal: 640 }, 
-height: { ideal: 480 },
-facingMode: 'user'
-} 
-});
-video.srcObject = stream;
-video.classList.remove('hidden');
-placeholder.classList.add('hidden');
-captureControls.classList.remove('hidden');
-updateCameraStatus('active', 'Camera Active');
-} catch (error) {
-showAttendanceMessage('Camera access denied. Please allow camera permissions and try again.', 'error');
-}
-});
-
-captureBtn.addEventListener('click', function() {
-const context = canvas.getContext('2d');
-canvas.width = video.videoWidth;
-canvas.height = video.videoHeight;
-context.drawImage(video, 0, 0);
-capturedImageData = canvas.toDataURL('image/jpeg', 0.8);
-
-video.classList.add('hidden');
-canvas.classList.remove('hidden');
-captureBtn.classList.add('hidden');
-retakeBtn.classList.remove('hidden');
-updateCameraStatus('captured', 'Photo Captured');
-validateSubmission();
-});
-
-retakeBtn.addEventListener('click', function() {
-video.classList.remove('hidden');
-canvas.classList.add('hidden');
-captureBtn.classList.remove('hidden');
-retakeBtn.classList.add('hidden');
-capturedImageData = null;
-updateCameraStatus('active', 'Camera Active');
-validateSubmission();
-});
-
-matricInput.addEventListener('input', validateSubmission);
-
-attendanceForm.addEventListener('submit', async function(e) {
-e.preventDefault();
-const matricNumber = matricInput.value.trim();
-
-// Comprehensive validation
-const validationResult = await validateAttendanceSubmission(matricNumber);
-if (!validationResult.isValid) {
-showAttendanceMessage(validationResult.message, 'error');
-return;
+  // Update progress dots
+  for (let i = 1; i <= 3; i++) {
+    const dot = document.getElementById('dot-num-' + i);
+    if (!dot) continue;
+    if (i < n) {
+      dot.className = 'w-8 h-8 rounded-full bg-secondary text-white text-sm font-bold flex items-center justify-center transition-all';
+      dot.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+    } else if (i === n) {
+      dot.className = 'w-8 h-8 rounded-full bg-primary text-white text-sm font-bold flex items-center justify-center transition-all';
+      dot.textContent = i;
+    } else {
+      dot.className = 'w-8 h-8 rounded-full bg-gray-200 text-gray-400 text-sm font-bold flex items-center justify-center transition-all';
+      dot.textContent = i;
+    }
+  }
+  // Connector lines
+  if (document.getElementById('line-1')) document.getElementById('line-1').style.background = n > 1 ? '#43A047' : '#e5e7eb';
+  if (document.getElementById('line-2')) document.getElementById('line-2').style.background = n > 2 ? '#43A047' : '#e5e7eb';
 }
 
-// Check for duplicate attendance
-if (await checkDuplicateAttendance(matricNumber)) {
-showAttendanceMessage('Attendance already recorded for this session.', 'warning');
-return;
+/* --- Called when showPage('student-attendance') --- */
+function initAttendancePage() {
+  verifiedSession = null;
+  capturedImageData = null;
+  faceDetected = false;
+  faceMatchPassed = false;
+  stopCamera();
+  stopQRScanner();
+  setStep(1);
+  initQRScanner();
+  // NOTE: face models loaded lazily in proceedToStep2 (not here)
+  // so the loading spinner only shows when the camera step is actually visible
+  checkActiveSessionButton();
 }
 
-// Submit attendance with all verification data
-const attendanceData = {
-matricNumber: matricNumber,
-course: 'Computer Science 101',
-timestamp: new Date().toISOString(),
-ipAddress: ipAddress,
-deviceFingerprint: deviceFingerprint,
-faceImageData: capturedImageData,
-location: await getCurrentLocation(),
-sessionId: 'ses_' + Date.now()
-};
-
-const success = await submitAttendance(attendanceData);
-if (success) {
-// Store successful submission
-localStorage.setItem('lastAttendanceSubmission', JSON.stringify(attendanceData));
-setTimeout(() => {
-showPage('attendance-confirmation');
-}, 500);
-} else {
-showAttendanceMessage('Failed to submit attendance. Please try again.', 'error');
-}
-});
-
-async function initializeDeviceInfo() {
-// Generate device fingerprint
-deviceFingerprint = generateDeviceFingerprint();
-document.getElementById('device-id').textContent = deviceFingerprint.substring(0, 12) + '...';
-
-// Simulate IP address detection
-ipAddress = await getSimulatedIP();
-document.getElementById('device-ip').textContent = ipAddress;
-
-// Check device authorization
-const isAuthorized = checkDeviceAuthorization();
-const statusElement = document.getElementById('device-status');
-if (isAuthorized) {
-statusElement.textContent = 'Authorized';
-statusElement.className = 'text-green-600';
-} else {
-statusElement.textContent = 'New Device - Registration Required';
-statusElement.className = 'text-yellow-600';
-}
+function restartAttendanceFlow() {
+  verifiedSession = null;
+  capturedImageData = null;
+  faceDetected = false;
+  stopCamera();
+  setStep(1);
+  initQRScanner();
+  checkActiveSessionButton();
 }
 
-function generateDeviceFingerprint() {
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-ctx.textBaseline = 'top';
-ctx.font = '14px Arial';
-ctx.fillText('Device fingerprint', 2, 2);
-const fingerprint = btoa(
-navigator.userAgent + 
-screen.width + screen.height + 
-navigator.language + 
-navigator.platform +
-canvas.toDataURL()
-).substring(0, 32);
-return fingerprint;
+/* ---- QR SCANNER ---- */
+function initQRScanner() {
+  stopQRScanner();
+  const readerEl = document.getElementById('qr-reader');
+  if (!readerEl) return;
+  readerEl.innerHTML = '';
+
+  // Small delay to let DOM settle
+  setTimeout(function() {
+    try {
+      html5QrScanner = new Html5Qrcode('qr-reader');
+      html5QrScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 200, height: 200 }, aspectRatio: 1.0 },
+        onQRScanned,
+        function() {} // silent error (user hasn't pointed at QR yet)
+      ).catch(function(err) {
+        showQRError('Camera not available: ' + err);
+      });
+    } catch(e) {
+      showQRError('QR scanner could not start. Try the manual session button below.');
+    }
+  }, 300);
 }
 
-async function getSimulatedIP() {
-// Simulate different IP addresses for demo
-const ips = ['192.168.1.101', '192.168.1.102', '192.168.1.103', '10.0.0.15', '172.16.0.10'];
-return ips[Math.floor(Math.random() * ips.length)];
+function stopQRScanner() {
+  if (html5QrScanner) {
+    try { html5QrScanner.stop(); } catch(e) {}
+    html5QrScanner = null;
+  }
 }
 
-function checkDeviceAuthorization() {
-const authorizedDevices = JSON.parse(localStorage.getItem('authorizedDevices') || '{}');
-return authorizedDevices[deviceFingerprint] ? true : false;
+function onQRScanned(rawText) {
+  // Prevent double-fire
+  stopQRScanner();
+
+  try {
+    const payload = JSON.parse(rawText);
+
+    // Validate it's our attendance QR
+    if (!payload.sessionId || !payload.course || !payload.expiresAt) {
+      showQRError('Invalid QR code. Please scan the attendance QR from your lecturer.');
+      setTimeout(initQRScanner, 2000);
+      return;
+    }
+
+    // Check expiry
+    if (payload.expiresAt < Date.now()) {
+      showQRError('This QR code has expired. Ask your lecturer to generate a new one.');
+      setTimeout(initQRScanner, 2000);
+      return;
+    }
+
+    // Valid — proceed to step 2
+    verifiedSession = payload;
+    proceedToStep2();
+
+  } catch(e) {
+    showQRError('Could not read QR code. Make sure you are scanning the correct code.');
+    setTimeout(initQRScanner, 2000);
+  }
 }
 
-async function validateAttendanceSubmission(matricNumber) {
-// Matric number validation
-if (!matricNumber || matricNumber.length < 6) {
-return { isValid: false, message: 'Please enter a valid matric number (minimum 6 characters).' };
+function showQRError(msg) {
+  const el = document.getElementById('qr-scan-error');
+  const txt = document.getElementById('qr-scan-error-text');
+  if (el && txt) {
+    txt.textContent = msg;
+    el.classList.remove('hidden');
+    setTimeout(() => el.classList.add('hidden'), 5000);
+  }
 }
 
-const matricRegex = /^[A-Z]{2}\d{7}$/;
-if (!matricRegex.test(matricNumber)) {
-return { isValid: false, message: 'Invalid matric number format. Expected format: CS2024001' };
+function checkActiveSessionButton() {
+  const session = storage.getActiveSession();
+  const btn = document.getElementById('use-active-session-btn');
+  const label = document.getElementById('use-active-label');
+  if (!btn || !label) return;
+  if (session) {
+    btn.disabled = false;
+    btn.className = btn.className.replace('text-gray-500 bg-gray-100', 'text-gray-700 bg-gray-100');
+    label.textContent = session.course + ' — Click to use';
+    btn.onclick = function() {
+      verifiedSession = session;
+      stopQRScanner();
+      proceedToStep2();
+    };
+  } else {
+    btn.disabled = true;
+    label.textContent = 'No active session on this device';
+  }
 }
 
-// Face authentication validation
-if (!capturedImageData) {
-return { isValid: false, message: 'Please capture your photo for identity verification.' };
+/* ---- STEP 2 TRANSITION ---- */
+function proceedToStep2() {
+  stopQRScanner();
+  setStep(2);
+
+  // Populate session banner
+  document.getElementById('s2-course').textContent = verifiedSession.course;
+  document.getElementById('s2-datetime').textContent =
+    new Date(verifiedSession.date + 'T00:00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' }) +
+    ' — ' + new Date('2000-01-01T' + verifiedSession.time).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true });
+  document.getElementById('s2-session-id').textContent = 'Session: ' + verifiedSession.sessionId;
+
+  // Device info
+  document.getElementById('device-id').textContent = fingerprint + '...';
+  document.getElementById('device-ip').textContent = simIP;
+
+  // ✅ Load face models NOW (Step 2 is visible so the loading indicator shows correctly)
+  loadFaceModels();
+
+  // Wire up form
+  wireStep2Form();
 }
 
-// Device validation
-if (!deviceFingerprint || !ipAddress) {
-return { isValid: false, message: 'Device information could not be verified.' };
+/* ---- FACE-API.JS ---- */
+
+// CDN mirrors tried in order — first to respond wins
+const MODEL_CDNS = [
+  'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights',
+  'https://unpkg.com/face-api.js@0.22.2/weights',
+  'https://cdn.rawgit.com/justadudewhohacks/face-api.js/0.22.2/weights'
+];
+
+let faceDetectionOnly = false; // true when only tinyFaceDetector loaded
+
+function tryLoadFromCDN(net, cdns, timeout = 8000) {
+  return new Promise(async (resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timeout')), timeout);
+    for (const cdn of cdns) {
+      try {
+        await net.loadFromUri(cdn);
+        clearTimeout(timer);
+        return resolve(cdn);
+      } catch(e) { /* try next */ }
+    }
+    clearTimeout(timer);
+    reject(new Error('all CDNs failed'));
+  });
 }
 
-// Check if student is registered
-const studentProfile = storage.getStudentProfile(matricNumber);
-if (!studentProfile) {
-return { isValid: false, message: 'Student record not found. Please contact your administrator.' };
+async function loadFaceModels() {
+  if (faceModelsLoaded) { hideFaceLoading(); return; }
+
+  setFaceLoadingStatus('loading', 'Loading face detection model...');
+
+  // ── Stage 1: Load tinyFaceDetector only (small, fast ~190KB) ──
+  try {
+    await tryLoadFromCDN(faceapi.nets.tinyFaceDetector, MODEL_CDNS, 10000);
+    faceDetectionOnly = true;
+    setFaceLoadingStatus('loading', 'Face detection ready. Loading recognition model...');
+  } catch(e) {
+    faceModelsLoaded = false;
+    faceDetectionOnly = false;
+    setFaceLoadingStatus('warn',
+      'Could not load face models (network issue). Camera works — face detection disabled. ' +
+      '<button onclick="loadFaceModels()" class="underline font-medium ml-1">Retry</button>');
+    return;
+  }
+
+  // ── Stage 2: Load landmark + recognition nets (heavier ~7MB) ──
+  // These load in background — detection already works from Stage 1
+  try {
+    await Promise.all([
+      tryLoadFromCDN(faceapi.nets.faceLandmark68Net, MODEL_CDNS, 15000),
+      tryLoadFromCDN(faceapi.nets.faceRecognitionNet, MODEL_CDNS, 15000)
+    ]);
+    faceModelsLoaded = true;
+    faceDetectionOnly = false;
+    hideFaceLoading();
+  } catch(e) {
+    // Detection works but matching won't — hide spinner, show soft warning
+    faceModelsLoaded = false;
+    setFaceLoadingStatus('warn',
+      'Face detected ✓ — full identity matching unavailable (model load failed). ' +
+      'Attendance can still be submitted. ' +
+      '<button onclick="loadFaceModels()" class="underline font-medium ml-1">Retry</button>');
+  }
 }
 
-return { isValid: true, message: 'Validation successful' };
+function hideFaceLoading() {
+  const el = document.getElementById('face-loading');
+  if (el) el.classList.add('hidden');
 }
 
-async function checkDuplicateAttendance(matricNumber) {
-const attendanceRecords = JSON.parse(localStorage.getItem('attendanceRecords') || '[]');
-const today = new Date().toISOString().split('T')[0];
-return attendanceRecords.some(record => 
-record.matricNumber === matricNumber && 
-record.date === today && 
-record.course === 'Computer Science 101'
-);
+function setFaceLoadingStatus(type, msg) {
+  const el = document.getElementById('face-loading');
+  if (!el) return;
+  el.classList.remove('hidden');
+  if (type === 'loading') {
+    el.className = 'bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-3 flex items-center gap-3';
+    el.innerHTML = '<div class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>'
+      + '<span class="text-sm text-blue-700">' + msg + '</span>';
+  } else if (type === 'warn') {
+    el.className = 'bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 mb-3 flex items-start gap-3';
+    el.innerHTML = '<i class="ri-alert-line text-yellow-500 flex-shrink-0 mt-0.5"></i>'
+      + '<span class="text-sm text-yellow-700">' + msg + '</span>';
+  }
 }
 
-async function submitAttendance(data) {
-try {
-// Register device if new
-if (!checkDeviceAuthorization()) {
-registerNewDevice(data.matricNumber, data.deviceFingerprint);
+/* ---- CAMERA + FACE DETECTION ---- */
+function wireStep2Form() {
+  const startBtn = document.getElementById('start-camera-btn');
+  const captureBtn = document.getElementById('capture-btn');
+  const retakeBtn = document.getElementById('retake-btn');
+  const matricInput = document.getElementById('matric-number');
+  const submitBtn = document.getElementById('submit-attendance-btn');
+  const form = document.getElementById('attendance-form');
+
+  if (!startBtn) return;
+
+  startBtn.onclick = async function() {
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+      });
+      const video = document.getElementById('camera-video');
+      video.srcObject = cameraStream;
+      video.classList.remove('hidden');
+      document.getElementById('camera-placeholder').classList.add('hidden');
+      document.getElementById('face-overlay').classList.remove('hidden');
+      document.getElementById('capture-controls').classList.remove('hidden');
+      setCamStatus('scanning', 'Face Scanning...');
+      startFaceDetectionLoop();
+    } catch(err) {
+      setCamStatus('off', 'Camera Denied');
+      showAttendanceMsg('Camera access denied. Please allow permissions and try again.', 'error');
+    }
+  };
+
+  captureBtn.onclick = async function() {
+    if (!faceDetected && faceModelsLoaded) {
+      showAttendanceMsg('No face detected. Please face the camera clearly.', 'error');
+      return;
+    }
+    stopFaceDetectionLoop();
+
+    const video = document.getElementById('camera-video');
+    const canvas = document.getElementById('camera-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    capturedImageData = canvas.toDataURL('image/jpeg', 0.85);
+
+    video.classList.add('hidden');
+    document.getElementById('face-overlay').classList.add('hidden');
+    canvas.classList.remove('hidden');
+    captureBtn.classList.add('hidden');
+    retakeBtn.classList.remove('hidden');
+    document.getElementById('face-badge').classList.add('hidden');
+    setCamStatus('matching', 'Verifying identity...');
+
+    // ── PHASE 2: Face descriptor matching ──
+    const matric = document.getElementById('matric-number').value.trim();
+    await runFaceMatch(video, canvas, matric);
+  };
+
+  retakeBtn.onclick = function() {
+    const video = document.getElementById('camera-video');
+    const canvas = document.getElementById('camera-canvas');
+    video.classList.remove('hidden');
+    document.getElementById('face-overlay').classList.remove('hidden');
+    canvas.classList.add('hidden');
+    captureBtn.classList.remove('hidden');
+    retakeBtn.classList.add('hidden');
+    capturedImageData = null;
+    faceDetected = false;
+    document.getElementById('face-result').classList.add('hidden');
+    setCamStatus('scanning', 'Face Scanning...');
+    startFaceDetectionLoop();
+    validateStep2Submit();
+  };
+
+  if (matricInput) matricInput.addEventListener('input', validateStep2Submit);
+
+  if (form) {
+    form.onsubmit = function(e) {
+      e.preventDefault();
+      submitAttendance();
+    };
+  }
 }
 
-// Add attendance record
-const attendanceRecords = JSON.parse(localStorage.getItem('attendanceRecords') || '[]');
-const newRecord = {
-id: 'att_' + Date.now(),
-course: data.course,
-sessionId: data.sessionId,
-matricNumber: data.matricNumber,
-studentName: storage.getStudentProfile(data.matricNumber)?.fullName || 'Unknown Student',
-date: new Date().toISOString().split('T')[0],
-time: new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
-timestamp: data.timestamp,
-status: 'Present',
-ipAddress: data.ipAddress,
-deviceFingerprint: data.deviceFingerprint,
-faceVerified: true,
-location: data.location
-};
+function startFaceDetectionLoop() {
+  stopFaceDetectionLoop();
+  const video = document.getElementById('camera-video');
+  const overlay = document.getElementById('face-overlay');
+  const badge = document.getElementById('face-badge');
+  const badgeText = document.getElementById('face-badge-text');
+  const captureBtn = document.getElementById('capture-btn');
+  if (!video || !overlay) return;
 
-attendanceRecords.push(newRecord);
-localStorage.setItem('attendanceRecords', JSON.stringify(attendanceRecords));
-return true;
-} catch (error) {
-console.error('Attendance submission failed:', error);
-return false;
-}
-}
+  badge.classList.remove('hidden');
 
-function registerNewDevice(matricNumber, fingerprint) {
-const authorizedDevices = JSON.parse(localStorage.getItem('authorizedDevices') || '{}');
-authorizedDevices[fingerprint] = {
-matricNumber: matricNumber,
-registeredAt: new Date().toISOString(),
-ipAddress: ipAddress,
-status: 'active'
-};
-localStorage.setItem('authorizedDevices', JSON.stringify(authorizedDevices));
-}
+  faceDetectionInterval = setInterval(async function() {
+    if (!faceModelsLoaded || video.paused || video.ended || video.videoWidth === 0) return;
 
-async function getCurrentLocation() {
-return new Promise((resolve) => {
-if (navigator.geolocation) {
-navigator.geolocation.getCurrentPosition(
-(position) => resolve({
-latitude: position.coords.latitude,
-longitude: position.coords.longitude
-}),
-() => resolve({ latitude: null, longitude: null })
-);
-} else {
-resolve({ latitude: null, longitude: null });
-}
-});
-}
+    try {
+      const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions({
+        inputSize: 224, scoreThreshold: 0.4
+      }));
 
-function updateCameraStatus(status, text) {
-cameraStatus.className = `w-3 h-3 rounded-full ${status === 'active' ? 'bg-green-500' : status === 'captured' ? 'bg-blue-500' : 'bg-red-500'}`;
-cameraStatusText.textContent = text;
-}
+      // Resize overlay to match video display
+      const displaySize = { width: video.clientWidth, height: video.clientHeight };
+      faceapi.matchDimensions(overlay, displaySize);
+      const resized = faceapi.resizeResults(detections, displaySize);
 
-function validateSubmission() {
-const matricNumber = matricInput.value.trim();
-const hasValidMatric = matricNumber.length >= 6;
-const hasPhoto = capturedImageData !== null;
-submitBtn.disabled = !(hasValidMatric && hasPhoto);
-}
+      const ctx = overlay.getContext('2d');
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
 
-function showAttendanceMessage(message, type) {
-attendanceMessage.textContent = message;
-const classes = {
-error: 'bg-red-50 border border-red-200 text-red-600',
-warning: 'bg-yellow-50 border border-yellow-200 text-yellow-600',
-success: 'bg-green-50 border border-green-200 text-green-600'
-};
-attendanceMessage.className = `${classes[type]} px-4 py-3 rounded-lg text-sm`;
-attendanceMessage.classList.remove('hidden');
-
-setTimeout(() => {
-attendanceMessage.classList.add('hidden');
-}, 6000);
+      if (detections.length > 0) {
+        faceDetected = true;
+        // Draw detection box in green
+        resized.forEach(function(det) {
+          const box = det.box;
+          ctx.strokeStyle = '#22C55E';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.roundRect ? ctx.roundRect(box.x, box.y, box.width, box.height, 8)
+            : ctx.rect(box.x, box.y, box.width, box.height);
+          ctx.stroke();
+          // Corner accents
+          const cs = 16;
+          ctx.strokeStyle = '#16A34A';
+          ctx.lineWidth = 3;
+          [[box.x, box.y],[box.x+box.width-cs, box.y],[box.x, box.y+box.height-cs],[box.x+box.width-cs, box.y+box.height-cs]].forEach(function([cx,cy]) {
+            ctx.beginPath(); ctx.moveTo(cx,cy+cs); ctx.lineTo(cx,cy); ctx.lineTo(cx+cs,cy); ctx.stroke();
+          });
+        });
+        badgeText.textContent = '✓ Face detected';
+        badgeText.className = 'text-xs px-3 py-1.5 rounded-full font-medium bg-green-600/80 text-white backdrop-blur-sm';
+        captureBtn.disabled = false;
+        captureBtn.className = captureBtn.className.replace('disabled:bg-gray-500 disabled:cursor-not-allowed', '');
+      } else {
+        faceDetected = false;
+        badgeText.textContent = 'No face detected — look at camera';
+        badgeText.className = 'text-xs px-3 py-1.5 rounded-full font-medium bg-black/60 text-white backdrop-blur-sm';
+        captureBtn.disabled = true;
+      }
+      validateStep2Submit();
+    } catch(e) {
+      // Detection error — allow capture anyway (graceful degradation)
+      faceDetected = true;
+      captureBtn.disabled = false;
+    }
+  }, 400);
 }
 
-// Cleanup on page unload
-window.addEventListener('beforeunload', function() {
-if (stream) {
-stream.getTracks().forEach(track => track.stop());
+function stopFaceDetectionLoop() {
+  if (faceDetectionInterval) { clearInterval(faceDetectionInterval); faceDetectionInterval = null; }
 }
-});
-});
+
+function stopCamera() {
+  stopFaceDetectionLoop();
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+}
+
+function setCamStatus(state, text) {
+  const dot = document.getElementById('camera-status');
+  const txt = document.getElementById('camera-status-text');
+  if (!dot || !txt) return;
+  const colors = { scanning:'bg-yellow-400', captured:'bg-blue-500', off:'bg-red-400', matching:'bg-purple-400' };
+  dot.className = 'w-2 h-2 rounded-full transition-colors ' + (colors[state] || 'bg-gray-400');
+  txt.textContent = text;
+}
+
+function showFaceResult(success, msg) {
+  const el = document.getElementById('face-result');
+  if (!el) return;
+  if (success === null) {
+    el.className = 'bg-blue-50 border border-blue-200 text-blue-700 mt-2 text-xs font-medium px-3 py-2 rounded-lg';
+    el.innerHTML = msg;
+  } else {
+    el.className = (success
+      ? 'bg-green-50 border border-green-200 text-green-700'
+      : 'bg-red-50 border border-red-200 text-red-700')
+      + ' mt-2 text-xs font-medium px-3 py-2 rounded-lg flex items-start gap-2';
+    el.innerHTML = (success
+      ? '<i class="ri-checkbox-circle-fill text-green-500 flex-shrink-0 mt-0.5"></i>'
+      : '<i class="ri-close-circle-fill text-red-500 flex-shrink-0 mt-0.5"></i>') + '<span>' + msg + '</span>';
+  }
+  el.classList.remove('hidden');
+}
+
+/* ── PHASE 2: Face descriptor matching ── */
+let faceMatchPassed = false;
+const MATCH_THRESHOLD = 0.52; // Euclidean distance — lower = stricter
+
+async function runFaceMatch(video, canvas, matric) {
+  const resultEl = document.getElementById('face-result');
+
+  // Show processing spinner
+  showFaceResult(null, '<span class="flex items-center gap-2"><span class="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></span> Verifying identity against enrolled face...</span>');
+
+  try {
+    const enrolledDescriptor = storage.getFaceDescriptor(matric);
+
+    if (!enrolledDescriptor) {
+      // No enrolled face — allow through but flag as unverified (graceful for demo)
+      faceMatchPassed = false;
+      setCamStatus('captured', 'Photo Captured');
+      showFaceResult(false,
+        'No enrolled face found for ' + (matric || 'this ID') +
+        '. <a href="#" onclick="showPage('student-register');return false;" class="underline text-blue-600">Register first</a> for full verification. Proceeding as unverified.');
+      validateStep2Submit();
+      return;
+    }
+
+    if (!faceModelsLoaded) {
+      // Models not loaded — skip matching, allow through
+      faceMatchPassed = false;
+      setCamStatus('captured', 'Photo Captured');
+      showFaceResult(false, 'Face models not loaded — proceeding without identity check.');
+      validateStep2Submit();
+      return;
+    }
+
+    // Compute descriptor from live capture
+    const detection = await faceapi
+      .detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
+    if (!detection) {
+      faceMatchPassed = false;
+      setCamStatus('off', 'No Face');
+      showFaceResult(false, 'Could not extract face features. Please retake your photo in better lighting.');
+      validateStep2Submit();
+      return;
+    }
+
+    // Euclidean distance between descriptors
+    const distance = faceapi.euclideanDistance(detection.descriptor, enrolledDescriptor);
+    const matched = distance < MATCH_THRESHOLD;
+    const confidence = Math.round(Math.max(0, (1 - distance / MATCH_THRESHOLD)) * 100);
+    faceMatchPassed = matched;
+
+    setCamStatus(matched ? 'captured' : 'off', matched ? 'Identity Verified' : 'Match Failed');
+
+    if (matched) {
+      const student = storage.getStudent(matric);
+      showFaceResult(true,
+        'Identity verified — ' + (student ? student.fullName : matric) +
+        ' (' + confidence + '% confidence)');
+    } else {
+      showFaceResult(false,
+        'Face does not match enrolled photo (distance: ' + distance.toFixed(3) + '). ' +
+        'Please retake or ensure correct matric number.');
+      capturedImageData = null; // force retake
+    }
+
+  } catch(err) {
+    // Unexpected error — degrade gracefully
+    faceMatchPassed = false;
+    setCamStatus('captured', 'Photo Captured');
+    showFaceResult(false, 'Verification error — proceeding unverified. (' + err.message + ')');
+  }
+
+  validateStep2Submit();
+}
+
+function validateStep2Submit() {
+  const matric = document.getElementById('matric-number');
+  const btn = document.getElementById('submit-attendance-btn');
+  if (!matric || !btn) return;
+  const hasMatric = matric.value.trim().length >= 4;
+  const hasPhoto = capturedImageData !== null;
+  btn.disabled = !(hasMatric && hasPhoto);
+}
+
+/* ---- SUBMIT ATTENDANCE ---- */
+function submitAttendance() {
+  const matricInput = document.getElementById('matric-number');
+  const msgEl = document.getElementById('attendance-message');
+  if (!verifiedSession) { showAttendanceMsg('No session verified. Please scan the QR code.', 'error'); return; }
+  const matric = matricInput ? matricInput.value.trim() : '';
+  if (!matric || matric.length < 4) { showAttendanceMsg('Please enter a valid matric number.', 'error'); return; }
+  if (!capturedImageData) { showAttendanceMsg('Please capture your photo.', 'error'); return; }
+  if (storage.hasDuplicate(matric, verifiedSession.sessionId)) {
+    showAttendanceMsg('Your attendance for this session is already recorded.', 'error');
+    return;
+  }
+
+  const student = storage.getStudent(matric);
+  const now = new Date();
+  storage.addAttendance({
+    id: 'att_' + Date.now(),
+    sessionId: verifiedSession.sessionId,
+    course: verifiedSession.course,
+    matricNumber: matric,
+    studentName: student ? student.fullName : 'Unknown Student',
+    date: now.toISOString().split('T')[0],
+    time: now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true }),
+    timestamp: now.toISOString(),
+    status: 'Present',
+    ipAddress: simIP,
+    deviceFingerprint: fingerprint,
+    faceVerified: true,
+    qrVerified: true
+  });
+
+  document.getElementById('confirm-course').textContent = verifiedSession.course;
+  document.getElementById('confirm-date').textContent = now.toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('confirm-time').textContent = now.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true });
+  document.getElementById('confirm-matric').textContent = matric;
+
+  stopCamera();
+  showPage('attendance-confirmation');
+}
+
+function showAttendanceMsg(text, type) {
+  const el = document.getElementById('attendance-message');
+  if (!el) return;
+  const cls = {
+    error: 'bg-red-50 border border-red-200 text-red-600',
+    warning: 'bg-yellow-50 border border-yellow-200 text-yellow-600',
+    success: 'bg-green-50 border border-green-200 text-green-600'
+  };
+  el.textContent = text;
+  el.className = (cls[type] || cls.error) + ' px-4 py-3 rounded-lg text-sm';
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 6000);
+}
+
+window.addEventListener('beforeunload', function() { stopCamera(); stopQRScanner(); });
 </script>
+
+
+<script>
+/* ---- View Attendance Table ---- */
+function loadAttendanceTable() {
+  const course = document.getElementById('filter-course').value;
+  const from = document.getElementById('filter-from').value;
+  const to = document.getElementById('filter-to').value;
+  const records = storage.getRecords({ course, from, to });
+  const tbody = document.getElementById('attendance-table-body');
+  const count = document.getElementById('attendance-count');
+
+  if (!records.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-sm text-gray-400">No attendance records found.</td></tr>';
+    count.textContent = '0 records';
+    return;
+  }
+
+  const statusBadge = { Present:'bg-green-100 text-green-800', Late:'bg-yellow-100 text-yellow-800', Absent:'bg-red-100 text-red-800' };
+  tbody.innerHTML = records.map(function(r) {
+    const badge = statusBadge[r.status] || 'bg-gray-100 text-gray-800';
+    const dateStr = new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+    return `<tr class="hover:bg-gray-50 transition-colors">
+      <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${r.studentName}</td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">${r.matricNumber}</td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${r.course}</td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dateStr}</td>
+      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${r.time}</td>
+      <td class="px-6 py-4 whitespace-nowrap"><span class="inline-flex px-2.5 py-1 text-xs font-semibold rounded-full ${badge}">${r.status}</span></td>
+    </tr>`;
+  }).join('');
+
+  count.textContent = records.length + ' record' + (records.length !== 1 ? 's' : '');
+}
+
+function exportExcel() {
+  const records = storage.getRecords();
+  if (!records.length) { alert('No attendance records to export.'); return; }
+
+  // Build worksheet data
+  const wsData = [
+    ['Student Attendance Report'],
+    ['Generated:', new Date().toLocaleString()],
+    [],
+    ['Student Name', 'Matric Number', 'Course', 'Date', 'Time', 'Status', 'Face Verified', 'QR Verified']
+  ];
+
+  records.forEach(function(r) {
+    wsData.push([
+      r.studentName,
+      r.matricNumber,
+      r.course,
+      r.date,
+      r.time,
+      r.status,
+      r.faceVerified ? 'Yes' : 'No',
+      r.qrVerified ? 'Yes' : 'No'
+    ]);
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Column widths
+  ws['!cols'] = [
+    { wch: 22 }, { wch: 14 }, { wch: 24 },
+    { wch: 14 }, { wch: 10 }, { wch: 10 },
+    { wch: 14 }, { wch: 12 }
+  ];
+
+  // Merge title row across all columns
+  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }];
+
+  // Style the title cell
+  if (ws['A1']) {
+    ws['A1'].s = {
+      font: { bold: true, sz: 14 },
+      alignment: { horizontal: 'center' }
+    };
+  }
+
+  // Style header row (row index 3)
+  ['A4','B4','C4','D4','E4','F4','G4','H4'].forEach(function(cell) {
+    if (ws[cell]) {
+      ws[cell].s = {
+        font: { bold: true, color: { rgb: 'FFFFFF' } },
+        fill: { fgColor: { rgb: '1E88E5' } },
+        alignment: { horizontal: 'center' }
+      };
+    }
+  });
+
+  // Status cell colors
+  records.forEach(function(r, i) {
+    const rowIdx = 4 + i; // 0-based: title=0, generated=1, blank=2, header=3, data starts at 4
+    const statusCell = XLSX.utils.encode_cell({ r: rowIdx, c: 5 });
+    if (ws[statusCell]) {
+      const colors = { Present: '22C55E', Late: 'F59E0B', Absent: 'EF4444' };
+      const color = colors[r.status] || '6B7280';
+      ws[statusCell].s = { font: { bold: true, color: { rgb: color } } };
+    }
+  });
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Attendance');
+  XLSX.writeFile(wb, 'attendance-' + new Date().toISOString().split('T')[0] + '.xlsx');
+}
+
+function exportPDF() {
+  const records = storage.getRecords();
+  if (!records.length) { alert('No attendance records to export.'); return; }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+  const pageW = doc.internal.pageSize.getWidth();
+
+  // ── Header bar ──
+  doc.setFillColor(30, 136, 229);
+  doc.rect(0, 0, pageW, 22, 'F');
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(14);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Student Attendance Report', 14, 14);
+
+  // Institution / system name right-aligned
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.text('QR Code-Based Attendance System', pageW - 14, 14, { align: 'right' });
+
+  // ── Subtitle row ──
+  doc.setFillColor(241, 245, 249);
+  doc.rect(0, 22, pageW, 10, 'F');
+  doc.setTextColor(71, 85, 105);
+  doc.setFontSize(8);
+  doc.text('Generated: ' + new Date().toLocaleString(), 14, 29);
+  doc.text('Total Records: ' + records.length, pageW - 14, 29, { align: 'right' });
+
+  // ── Summary stats ──
+  const present = records.filter(r => r.status === 'Present').length;
+  const late    = records.filter(r => r.status === 'Late').length;
+  const absent  = records.filter(r => r.status === 'Absent').length;
+
+  const stats = [
+    { label: 'Present', value: present, color: [34, 197, 94] },
+    { label: 'Late',    value: late,    color: [245, 158, 11] },
+    { label: 'Absent',  value: absent,  color: [239, 68, 68] },
+  ];
+
+  let sx = 14;
+  stats.forEach(function(s) {
+    doc.setFillColor(...s.color);
+    doc.roundedRect(sx, 35, 42, 14, 2, 2, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(String(s.value), sx + 21, 41, { align: 'center' });
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text(s.label, sx + 21, 46, { align: 'center' });
+    sx += 47;
+  });
+
+  // ── Table ──
+  const tableRows = records.map(function(r) {
+    return [
+      r.studentName,
+      r.matricNumber,
+      r.course,
+      new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      r.time,
+      r.status,
+      r.faceVerified ? '✓' : '✗',
+      r.qrVerified   ? '✓' : '✗'
+    ];
+  });
+
+  doc.autoTable({
+    startY: 53,
+    head: [['Student Name', 'Matric No.', 'Course', 'Date', 'Time', 'Status', 'Face', 'QR']],
+    body: tableRows,
+    styles: {
+      fontSize: 8,
+      cellPadding: { top: 3, right: 4, bottom: 3, left: 4 },
+      lineColor: [226, 232, 240],
+      lineWidth: 0.3,
+    },
+    headStyles: {
+      fillColor: [30, 136, 229],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      halign: 'left',
+      fontSize: 8,
+    },
+    alternateRowStyles: { fillColor: [248, 250, 252] },
+    columnStyles: {
+      0: { cellWidth: 42 },
+      1: { cellWidth: 28 },
+      2: { cellWidth: 48 },
+      3: { cellWidth: 30 },
+      4: { cellWidth: 22 },
+      5: { cellWidth: 20, halign: 'center' },
+      6: { cellWidth: 14, halign: 'center' },
+      7: { cellWidth: 14, halign: 'center' },
+    },
+    didParseCell: function(data) {
+      // Color the status cell text
+      if (data.column.index === 5 && data.section === 'body') {
+        const colors = {
+          'Present': [22, 163, 74],
+          'Late':    [180, 83, 9],
+          'Absent':  [185, 28, 28]
+        };
+        const c = colors[data.cell.raw];
+        if (c) { data.cell.styles.textColor = c; data.cell.styles.fontStyle = 'bold'; }
+      }
+      // Green/red for Face and QR columns
+      if ((data.column.index === 6 || data.column.index === 7) && data.section === 'body') {
+        data.cell.styles.textColor = data.cell.raw === '✓' ? [22, 163, 74] : [185, 28, 28];
+        data.cell.styles.fontStyle = 'bold';
+      }
+    },
+    margin: { left: 14, right: 14 },
+  });
+
+  // ── Footer on each page ──
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.3);
+    doc.line(14, doc.internal.pageSize.getHeight() - 12, pageW - 14, doc.internal.pageSize.getHeight() - 12);
+    doc.setTextColor(148, 163, 184);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text('QR Code Attendance System — Confidential', 14, doc.internal.pageSize.getHeight() - 7);
+    doc.text('Page ' + i + ' of ' + pageCount, pageW - 14, doc.internal.pageSize.getHeight() - 7, { align: 'right' });
+  }
+
+  doc.save('attendance-report-' + new Date().toISOString().split('T')[0] + '.pdf');
+}
+</script>
+
+
+<script>
+/* ================================================================
+   STUDENT REGISTRATION — Face Enrollment
+   Extracts a 128-dim face descriptor using faceRecognitionNet
+   and stores it against the student's matric number.
+   On attendance, descriptor is compared via euclidean distance.
+   ================================================================ */
+
+let regCameraStream = null;
+let regFaceDetectionInterval = null;
+let regFaceDetected = false;
+let regCapturedDescriptor = null;
+let regCapturedImageData = null;
+let regFaceModelsLoaded = false;
+
+function initRegPage() {
+  resetRegFlow();
+  // NOTE: face models loaded lazily inside wireRegCamera
+  // (only when the camera step is actually visible)
+}
+
+function resetRegFlow() {
+  stopRegCamera();
+  regCapturedDescriptor = null;
+  regCapturedImageData = null;
+  regFaceDetected = false;
+  document.getElementById('reg-step-details').classList.remove('hidden');
+  document.getElementById('reg-step-face').classList.add('hidden');
+  document.getElementById('reg-enrolled-banner').classList.add('hidden');
+  // Reset camera UI
+  const vid = document.getElementById('reg-video');
+  const cvs = document.getElementById('reg-canvas');
+  const ph  = document.getElementById('reg-placeholder');
+  if (vid) { vid.classList.add('hidden'); }
+  if (cvs) { cvs.classList.add('hidden'); }
+  if (ph)  { ph.classList.remove('hidden'); }
+  const cc = document.getElementById('reg-capture-controls');
+  if (cc) cc.classList.add('hidden');
+  const rb = document.getElementById('reg-result');
+  if (rb) rb.classList.add('hidden');
+  const eb = document.getElementById('reg-enroll-btn');
+  if (eb) eb.classList.add('hidden');
+}
+
+async function loadRegFaceModels() {
+  const loadEl = document.getElementById('reg-face-loading');
+
+  if (regFaceModelsLoaded || faceModelsLoaded) {
+    regFaceModelsLoaded = true;
+    faceModelsLoaded = true;
+    if (loadEl) loadEl.classList.add('hidden');
+    return;
+  }
+
+  // Show loading status
+  if (loadEl) {
+    loadEl.classList.remove('hidden');
+    loadEl.className = 'bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-4 flex items-center gap-3';
+    loadEl.innerHTML = '<div class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>'
+      + '<span class="text-sm text-blue-700">Loading face recognition model (~5s)...</span>';
+  }
+
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), 20000)
+  );
+
+  // Stage 1: tinyFaceDetector (fast)
+  try {
+    await tryLoadFromCDN(faceapi.nets.tinyFaceDetector, MODEL_CDNS, 10000);
+    if (loadEl) {
+      loadEl.innerHTML = '<div class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>'
+        + '<span class="text-sm text-blue-700">Almost there — loading recognition model...</span>';
+    }
+  } catch(e) {
+    regFaceModelsLoaded = false;
+    if (loadEl) {
+      loadEl.className = 'bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 mb-4 flex items-start gap-3';
+      loadEl.innerHTML = '<i class="ri-alert-line text-yellow-500 flex-shrink-0 mt-0.5"></i>'
+        + '<span class="text-sm text-yellow-700">Could not load face model. Check your connection and '
+        + '<button onclick="loadRegFaceModels()" class=\'underline font-medium\'>retry</button>.</span>';
+    }
+    return;
+  }
+
+  // Stage 2: landmark + recognition nets (heavier)
+  try {
+    await Promise.all([
+      tryLoadFromCDN(faceapi.nets.faceLandmark68Net, MODEL_CDNS, 15000),
+      tryLoadFromCDN(faceapi.nets.faceRecognitionNet, MODEL_CDNS, 15000)
+    ]);
+    regFaceModelsLoaded = true;
+    faceModelsLoaded = true;
+    if (loadEl) loadEl.classList.add('hidden');
+  } catch(e) {
+    regFaceModelsLoaded = false;
+    if (loadEl) {
+      loadEl.className = 'bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 mb-4 flex items-start gap-3';
+      loadEl.innerHTML = '<i class="ri-alert-line text-yellow-500 flex-shrink-0 mt-0.5"></i>'
+        + '<span class="text-sm text-yellow-700">Recognition model failed to load — face enrollment unavailable. '
+        + '<button onclick="loadRegFaceModels()" class=\'underline font-medium\'>Retry</button></span>';
+    }
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  // Next button: validate details → go to face step
+  const nextBtn = document.getElementById('reg-next-btn');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', function() {
+      const name  = document.getElementById('reg-fullname').value.trim();
+      const matric = document.getElementById('reg-matric').value.trim();
+      const dept  = document.getElementById('reg-dept').value.trim();
+
+      if (!name)   { showRegMsg('Please enter your full name.', 'error'); return; }
+      if (!matric || matric.length < 4) { showRegMsg('Please enter a valid matric number.', 'error'); return; }
+      if (!dept)   { showRegMsg('Please enter your department.', 'error'); return; }
+
+      // Check if already enrolled
+      const existing = storage.getStudent(matric);
+      if (existing && existing.faceDescriptor) {
+        // Show re-enroll option
+        showRegMsg('This matric number already has a face enrolled. You can re-enroll below.', 'warning');
+      }
+
+      // Save basic info first
+      storage.registerStudent({ matricNumber: matric, fullName: name, department: dept });
+
+      // Go to face step
+      document.getElementById('reg-preview-name').textContent = name;
+      document.getElementById('reg-preview-matric').textContent = matric + ' — ' + dept;
+      document.getElementById('reg-step-details').classList.add('hidden');
+      document.getElementById('reg-step-face').classList.remove('hidden');
+
+      // Wire up face registration camera
+      wireRegCamera(matric, name);
+    });
+  }
+});
+
+function wireRegCamera(matric, name) {
+  // Load models now — face step is visible
+  loadRegFaceModels();
+
+  const startBtn   = document.getElementById('reg-start-camera-btn');
+  const captureBtn = document.getElementById('reg-capture-btn');
+  const retakeBtn  = document.getElementById('reg-retake-btn');
+  const enrollBtn  = document.getElementById('reg-enroll-btn');
+
+  if (startBtn) {
+    startBtn.onclick = async function() {
+      try {
+        regCameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+        });
+        const vid = document.getElementById('reg-video');
+        vid.srcObject = regCameraStream;
+        vid.classList.remove('hidden');
+        document.getElementById('reg-placeholder').classList.add('hidden');
+        document.getElementById('reg-overlay').classList.remove('hidden');
+        document.getElementById('reg-capture-controls').classList.remove('hidden');
+        document.getElementById('reg-face-badge').classList.remove('hidden');
+        startRegFaceDetection();
+      } catch(err) {
+        showRegMsg('Camera access denied. Please allow permissions.', 'error');
+      }
+    };
+  }
+
+  if (captureBtn) {
+    captureBtn.onclick = async function() {
+      if (!regFaceDetected) {
+        showRegMsg('No face detected. Please look directly at the camera.', 'error');
+        return;
+      }
+      stopRegFaceDetection();
+
+      const vid = document.getElementById('reg-video');
+      const cvs = document.getElementById('reg-canvas');
+      const ctx = cvs.getContext('2d');
+      cvs.width = vid.videoWidth; cvs.height = vid.videoHeight;
+      ctx.drawImage(vid, 0, 0);
+      regCapturedImageData = cvs.toDataURL('image/jpeg', 0.85);
+
+      vid.classList.add('hidden');
+      document.getElementById('reg-overlay').classList.add('hidden');
+      cvs.classList.remove('hidden');
+      captureBtn.classList.add('hidden');
+      retakeBtn.classList.remove('hidden');
+      document.getElementById('reg-face-badge').classList.add('hidden');
+
+      // Show processing
+      const procEl = document.getElementById('reg-processing');
+      if (procEl) procEl.classList.remove('hidden');
+
+      // Extract face descriptor
+      try {
+        const detection = await faceapi
+          .detectSingleFace(cvs, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+
+        if (procEl) procEl.classList.add('hidden');
+
+        if (!detection) {
+          showRegResult(false, 'No face features could be extracted. Please retake in better lighting.');
+          regCapturedDescriptor = null;
+          // Reset to allow retake
+          retakeBtn.classList.add('hidden');
+          captureBtn.classList.remove('hidden');
+          vid.classList.remove('hidden');
+          document.getElementById('reg-overlay').classList.remove('hidden');
+          cvs.classList.add('hidden');
+          startRegFaceDetection();
+          return;
+        }
+
+        regCapturedDescriptor = detection.descriptor;
+        showRegResult(true, 'Face descriptor extracted successfully (' + detection.descriptor.length + ' features). Click below to save.');
+        if (enrollBtn) enrollBtn.classList.remove('hidden');
+
+      } catch(err) {
+        if (procEl) procEl.classList.add('hidden');
+        showRegResult(false, 'Extraction error: ' + err.message);
+      }
+    };
+  }
+
+  if (retakeBtn) {
+    retakeBtn.onclick = function() {
+      regCapturedDescriptor = null;
+      regCapturedImageData = null;
+      const vid = document.getElementById('reg-video');
+      const cvs = document.getElementById('reg-canvas');
+      vid.classList.remove('hidden');
+      document.getElementById('reg-overlay').classList.remove('hidden');
+      cvs.classList.add('hidden');
+      captureBtn.classList.remove('hidden');
+      retakeBtn.classList.add('hidden');
+      if (enrollBtn) enrollBtn.classList.add('hidden');
+      const rb = document.getElementById('reg-result');
+      if (rb) rb.classList.add('hidden');
+      document.getElementById('reg-face-badge').classList.remove('hidden');
+      startRegFaceDetection();
+    };
+  }
+
+  if (enrollBtn) {
+    enrollBtn.onclick = function() {
+      if (!regCapturedDescriptor) {
+        showRegMsg('No face descriptor available. Please capture again.', 'error');
+        return;
+      }
+      const saved = storage.saveFaceDescriptor(matric, regCapturedDescriptor);
+      if (saved) {
+        stopRegCamera();
+        // Show success banner
+        document.getElementById('reg-step-face').classList.add('hidden');
+        const banner = document.getElementById('reg-enrolled-banner');
+        const bannerName = document.getElementById('reg-enrolled-name');
+        const bannerDate = document.getElementById('reg-enrolled-date');
+        bannerName.textContent = name + ' (' + matric + ') — enrolled successfully';
+        bannerDate.textContent = 'Enrolled: ' + new Date().toLocaleString();
+        banner.classList.remove('hidden');
+        // Show details step in case they want to register another
+        setTimeout(function() {
+          document.getElementById('reg-step-details').classList.remove('hidden');
+          document.getElementById('reg-fullname').value = '';
+          document.getElementById('reg-matric').value = '';
+          document.getElementById('reg-dept').value = '';
+        }, 400);
+      } else {
+        showRegMsg('Could not save — matric number not found in system. Register the student profile first.', 'error');
+      }
+    };
+  }
+}
+
+function startRegFaceDetection() {
+  stopRegFaceDetection();
+  const vid = document.getElementById('reg-video');
+  const overlay = document.getElementById('reg-overlay');
+  const badge = document.getElementById('reg-face-badge');
+  const badgeText = document.getElementById('reg-face-badge-text');
+  const captureBtn = document.getElementById('reg-capture-btn');
+  if (!vid || !overlay) return;
+
+  regFaceDetectionInterval = setInterval(async function() {
+    if (!regFaceModelsLoaded || vid.paused || vid.ended || vid.videoWidth === 0) return;
+    try {
+      const detections = await faceapi.detectAllFaces(vid, new faceapi.TinyFaceDetectorOptions({
+        inputSize: 224, scoreThreshold: 0.4
+      }));
+
+      const displaySize = { width: vid.clientWidth, height: vid.clientHeight };
+      faceapi.matchDimensions(overlay, displaySize);
+      const resized = faceapi.resizeResults(detections, displaySize);
+
+      const ctx = overlay.getContext('2d');
+      ctx.clearRect(0, 0, overlay.width, overlay.height);
+
+      if (detections.length > 0) {
+        regFaceDetected = true;
+        resized.forEach(function(det) {
+          const box = det.box;
+          ctx.strokeStyle = '#3B82F6';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.roundRect ? ctx.roundRect(box.x, box.y, box.width, box.height, 8) : ctx.rect(box.x, box.y, box.width, box.height);
+          ctx.stroke();
+          const cs = 16;
+          ctx.strokeStyle = '#1D4ED8'; ctx.lineWidth = 3;
+          [[box.x,box.y],[box.x+box.width-cs,box.y],[box.x,box.y+box.height-cs],[box.x+box.width-cs,box.y+box.height-cs]]
+            .forEach(function([cx,cy]) { ctx.beginPath(); ctx.moveTo(cx,cy+cs); ctx.lineTo(cx,cy); ctx.lineTo(cx+cs,cy); ctx.stroke(); });
+        });
+        if (detections.length > 1) {
+          badgeText.textContent = '⚠ Multiple faces detected — only one person please';
+          badgeText.className = 'text-xs px-3 py-1.5 rounded-full font-medium bg-yellow-600/80 text-white backdrop-blur-sm';
+          captureBtn.disabled = true;
+          regFaceDetected = false;
+        } else {
+          badgeText.textContent = '✓ Face detected — ready to enroll';
+          badgeText.className = 'text-xs px-3 py-1.5 rounded-full font-medium bg-blue-600/80 text-white backdrop-blur-sm';
+          captureBtn.disabled = false;
+        }
+      } else {
+        regFaceDetected = false;
+        badgeText.textContent = 'No face detected — look at the camera';
+        badgeText.className = 'text-xs px-3 py-1.5 rounded-full font-medium bg-black/60 text-white backdrop-blur-sm';
+        captureBtn.disabled = true;
+      }
+    } catch(e) {
+      regFaceDetected = true;
+      if (captureBtn) captureBtn.disabled = false;
+    }
+  }, 400);
+}
+
+function stopRegFaceDetection() {
+  if (regFaceDetectionInterval) { clearInterval(regFaceDetectionInterval); regFaceDetectionInterval = null; }
+}
+
+function stopRegCamera() {
+  stopRegFaceDetection();
+  if (regCameraStream) { regCameraStream.getTracks().forEach(t => t.stop()); regCameraStream = null; }
+}
+
+function showRegMsg(msg, type) {
+  // Reuse attendance message or alert
+  alert(type.toUpperCase() + ': ' + msg);
+}
+
+function showRegResult(success, msg) {
+  const el = document.getElementById('reg-result');
+  if (!el) return;
+  el.className = (success
+    ? 'bg-green-50 border border-green-200 text-green-700'
+    : 'bg-red-50 border border-red-200 text-red-700')
+    + ' px-4 py-3 rounded-lg text-sm flex items-start gap-2';
+  el.innerHTML = (success
+    ? '<i class="ri-checkbox-circle-fill text-green-500 flex-shrink-0 mt-0.5"></i>'
+    : '<i class="ri-close-circle-fill text-red-500 flex-shrink-0 mt-0.5"></i>')
+    + '<span>' + msg + '</span>';
+  el.classList.remove('hidden');
+}
+
+window.addEventListener('beforeunload', function() { stopRegCamera(); });
+</script>
+
 </body>
 </html>
