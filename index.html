@@ -91,6 +91,7 @@ input[type="checkbox"]:checked::after {
           <button onclick="showPage('student-register')" class="cursor-pointer !rounded-button bg-white border-2 border-gray-300 text-gray-800 px-8 py-4 text-lg font-semibold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-3">
             <i class="ri-user-add-line text-xl"></i> Student Registration
           </button>
+
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div class="bg-white/80 backdrop-blur-sm p-6 rounded-lg text-center">
@@ -431,129 +432,145 @@ input[type="checkbox"]:checked::after {
   <div class="min-h-screen bg-gray-50 px-4 py-8">
     <div class="w-full max-w-lg mx-auto">
       <div class="bg-white rounded-2xl shadow-xl p-8">
-
         <div class="text-center mb-8">
           <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <i class="ri-user-add-line text-3xl text-primary"></i>
           </div>
           <h2 class="text-2xl font-bold">Student Registration</h2>
-          <p class="text-gray-500 text-sm mt-1">Register your face for attendance verification</p>
+          <p class="text-gray-500 text-sm mt-1">Enroll your face for attendance verification</p>
         </div>
 
-        <!-- Enrolled status banner (shown after enroll or if already enrolled) -->
-        <div id="reg-enrolled-banner" class="hidden bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <!-- Success banner -->
+        <div id="reg-success-banner" class="hidden bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-start gap-3">
           <i class="ri-checkbox-circle-fill text-green-500 text-xl flex-shrink-0 mt-0.5"></i>
           <div>
-            <p class="text-sm font-bold text-green-800" id="reg-enrolled-name">-</p>
-            <p class="text-xs text-green-700 mt-0.5">Face enrolled successfully — you can now mark attendance</p>
-            <p class="text-xs text-green-500 mt-0.5 font-mono" id="reg-enrolled-date">-</p>
+            <p id="reg-success-name" class="text-sm font-bold text-green-800">-</p>
+            <p class="text-xs text-green-700 mt-0.5">Face enrolled — you can now mark attendance</p>
+            <p id="reg-success-date" class="text-xs text-green-500 mt-0.5 font-mono">-</p>
           </div>
         </div>
 
-        <!-- Step 1: Details -->
+        <!-- STEP A: Details form -->
         <div id="reg-step-details">
           <div class="space-y-4 mb-6">
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-user-line text-gray-400"></i></div>
-                <input type="text" id="reg-fullname"
-                  class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                  placeholder="e.g. Emily Chen">
+                <input type="text" id="reg-fullname" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="e.g. Emily Chen">
               </div>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Matric Number</label>
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-id-card-line text-gray-400"></i></div>
-                <input type="text" id="reg-matric"
-                  class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                  placeholder="e.g. CS2024001">
+                <input type="text" id="reg-matric" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="e.g. CS2024001">
               </div>
-              <p class="text-xs text-gray-400 mt-1">Demo IDs already seeded: CS2024001 · CS2024002 · CS2024003</p>
+              <p class="text-xs text-gray-400 mt-1">Pre-seeded: CS2024001 · CS2024002 · CS2024003</p>
             </div>
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
               <div class="relative">
                 <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-building-line text-gray-400"></i></div>
-                <input type="text" id="reg-dept"
-                  class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm"
-                  placeholder="e.g. Computer Science">
+                <input type="text" id="reg-dept" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="e.g. Computer Science">
               </div>
             </div>
           </div>
+          <div id="reg-details-error" class="hidden bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg mb-4"></div>
           <button id="reg-next-btn" type="button"
             class="cursor-pointer !rounded-button w-full bg-primary text-white py-3 font-semibold hover:bg-blue-600 transition-colors text-sm flex items-center justify-center gap-2">
             <i class="ri-camera-line"></i> Continue to Face Enrollment
           </button>
+          <div class="mt-4 text-center">
+            <button onclick="showPage('landing-page')" class="cursor-pointer text-gray-400 hover:text-gray-600 text-sm">← Back to Home</button>
+          </div>
         </div>
 
-        <!-- Step 2: Face Enrollment -->
+        <!-- STEP B: Camera + face enrollment -->
         <div id="reg-step-face" class="hidden">
-          <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5 flex items-start gap-3">
-            <i class="ri-information-line text-blue-500 mt-0.5"></i>
-            <div class="text-sm text-blue-800">
-              <p class="font-semibold" id="reg-preview-name">-</p>
-              <p class="text-xs text-blue-700 mt-0.5" id="reg-preview-matric">-</p>
+          <!-- Student info chip -->
+          <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 flex items-center gap-3">
+            <i class="ri-user-line text-blue-500"></i>
+            <div>
+              <p id="reg-chip-name" class="text-sm font-semibold text-blue-900">-</p>
+              <p id="reg-chip-matric" class="text-xs text-blue-600">-</p>
             </div>
           </div>
 
-          <!-- Face model loading -->
-          <div id="reg-face-loading" class="bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-4 flex items-center gap-3">
-            <div class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
-            <span class="text-sm text-blue-700">Loading face recognition model...</span>
+          <!-- Model loading progress — the key fix -->
+          <div id="reg-model-status" class="rounded-xl border px-4 py-3 mb-4 text-sm">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-medium text-gray-700">Loading face models</span>
+              <span id="reg-model-pct" class="text-xs font-mono text-primary">0%</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-1.5 mb-3">
+              <div id="reg-model-bar" class="bg-primary h-1.5 rounded-full transition-all duration-500" style="width:0%"></div>
+            </div>
+            <div id="reg-model-steps" class="space-y-1 text-xs text-gray-500">
+              <div class="flex items-center gap-2" id="reg-step-tiny">
+                <div class="w-3 h-3 rounded-full bg-gray-200 flex-shrink-0" id="reg-dot-tiny"></div>
+                <span>Face detector (190 KB)</span>
+                <span id="reg-tiny-status" class="ml-auto text-gray-400">waiting</span>
+              </div>
+              <div class="flex items-center gap-2" id="reg-step-lm">
+                <div class="w-3 h-3 rounded-full bg-gray-200 flex-shrink-0" id="reg-dot-lm"></div>
+                <span>Landmark model (350 KB)</span>
+                <span id="reg-lm-status" class="ml-auto text-gray-400">waiting</span>
+              </div>
+              <div class="flex items-center gap-2" id="reg-step-rec">
+                <div class="w-3 h-3 rounded-full bg-gray-200 flex-shrink-0" id="reg-dot-rec"></div>
+                <span>Recognition model (6.2 MB)</span>
+                <span id="reg-rec-status" class="ml-auto text-gray-400">waiting</span>
+              </div>
+            </div>
+            <div id="reg-model-note" class="mt-2 text-xs text-gray-400">Models cache after first load — subsequent visits are instant.</div>
           </div>
 
-          <div class="relative bg-gray-900 rounded-xl overflow-hidden mb-4" style="aspect-ratio:4/3;">
+          <!-- Camera viewport -->
+          <div class="relative bg-gray-900 rounded-xl overflow-hidden mb-3" style="aspect-ratio:4/3;">
             <video id="reg-video" class="w-full h-full object-cover hidden" autoplay playsinline muted></video>
             <canvas id="reg-overlay" class="absolute inset-0 w-full h-full hidden" style="pointer-events:none;"></canvas>
             <canvas id="reg-canvas" class="w-full h-full object-cover hidden"></canvas>
-            <div id="reg-placeholder" class="absolute inset-0 flex items-center justify-center">
+            <div id="reg-cam-placeholder" class="absolute inset-0 flex items-center justify-center">
               <div class="text-center text-white">
                 <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/20">
                   <i class="ri-camera-line text-2xl text-white/60"></i>
                 </div>
                 <p class="text-sm text-white/60 mb-4">Look directly at the camera</p>
-                <button type="button" id="reg-start-camera-btn"
+                <button type="button" id="reg-start-cam-btn"
                   class="cursor-pointer !rounded-button bg-primary text-white px-6 py-2 text-sm font-semibold hover:bg-blue-600 transition-colors">
                   Start Camera
                 </button>
               </div>
             </div>
             <div id="reg-face-badge" class="hidden absolute top-3 left-0 right-0 flex justify-center pointer-events-none">
-              <span id="reg-face-badge-text" class="text-xs px-3 py-1.5 rounded-full font-medium bg-black/60 text-white backdrop-blur-sm"></span>
+              <span id="reg-badge-text" class="text-xs px-3 py-1.5 rounded-full font-medium bg-black/60 text-white"></span>
             </div>
-            <div id="reg-capture-controls" class="hidden absolute bottom-4 left-0 right-0 flex justify-center gap-3">
+            <div id="reg-cam-controls" class="hidden absolute bottom-4 left-0 right-0 flex justify-center gap-3">
               <button type="button" id="reg-capture-btn" disabled
-                class="cursor-pointer !rounded-button bg-primary text-white px-5 py-2 text-sm font-semibold hover:bg-blue-600 transition-colors flex items-center gap-1.5 disabled:bg-gray-500 disabled:cursor-not-allowed">
+                class="cursor-pointer !rounded-button bg-primary text-white px-5 py-2 text-sm font-semibold flex items-center gap-1.5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors">
                 <i class="ri-camera-fill"></i> Enroll Face
               </button>
               <button type="button" id="reg-retake-btn"
-                class="cursor-pointer !rounded-button bg-gray-700 text-white px-5 py-2 text-sm font-semibold hover:bg-gray-800 transition-colors flex items-center gap-1.5 hidden">
+                class="cursor-pointer !rounded-button bg-gray-700 text-white px-5 py-2 text-sm font-semibold hover:bg-gray-800 transition-colors items-center gap-1.5 hidden">
                 <i class="ri-refresh-line"></i> Retake
               </button>
             </div>
           </div>
 
-          <!-- Processing indicator -->
-          <div id="reg-processing" class="hidden bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex items-center gap-3 mb-3">
+          <!-- Processing + result -->
+          <div id="reg-processing" class="hidden bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-3 flex items-center gap-3">
             <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
             <span class="text-sm text-blue-700">Extracting face descriptor...</span>
           </div>
-
-          <!-- Result -->
-          <div id="reg-result" class="hidden mb-4"></div>
-
-          <!-- Enroll button (shown after capture) -->
-          <button id="reg-enroll-btn" type="button"
+          <div id="reg-result" class="hidden mb-3"></div>
+          <button id="reg-save-btn" type="button"
             class="cursor-pointer !rounded-button w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors text-sm hidden flex items-center justify-center gap-2">
-            <i class="ri-save-line"></i> Save & Complete Registration
+            <i class="ri-save-line"></i> Save Registration
           </button>
 
-          <button type="button" onclick="resetRegFlow()"
-            class="cursor-pointer w-full text-gray-400 hover:text-gray-600 text-xs mt-3 text-center block">
-            ← Back to details
-          </button>
+          <button type="button" onclick="resetRegPage()"
+            class="cursor-pointer w-full text-gray-400 hover:text-gray-600 text-xs mt-3 text-center block">← Back to details</button>
         </div>
 
       </div>
@@ -871,33 +888,28 @@ class AttendanceStorage {
     p.push(np); localStorage.setItem('lecturerProfiles', JSON.stringify(p)); return np;
   }
   getStudent(m) { return JSON.parse(localStorage.getItem('studentProfiles')||'[]').find(s=>s.matricNumber===m); }
-  getAllStudents() { return JSON.parse(localStorage.getItem('studentProfiles')||'[]'); }
   registerStudent(data) {
-    const students = JSON.parse(localStorage.getItem('studentProfiles')||'[]');
-    const existing = students.findIndex(s => s.matricNumber === data.matricNumber);
-    if (existing !== -1) { students[existing] = { ...students[existing], ...data }; }
-    else { students.push({ id: 'std_' + Date.now(), ...data }); }
-    localStorage.setItem('studentProfiles', JSON.stringify(students));
+    const list = JSON.parse(localStorage.getItem('studentProfiles')||'[]');
+    const idx = list.findIndex(s => s.matricNumber === data.matricNumber);
+    if (idx !== -1) { list[idx] = { ...list[idx], ...data }; }
+    else { list.push({ id:'std_'+Date.now(), ...data }); }
+    localStorage.setItem('studentProfiles', JSON.stringify(list));
   }
-  saveFaceDescriptor(matricNumber, descriptor) {
-    const students = JSON.parse(localStorage.getItem('studentProfiles')||'[]');
-    const idx = students.findIndex(s => s.matricNumber === matricNumber);
-    if (idx !== -1) {
-      students[idx].faceDescriptor = Array.from(descriptor);
-      students[idx].faceEnrolledAt = new Date().toISOString();
-      localStorage.setItem('studentProfiles', JSON.stringify(students));
-      return true;
-    }
-    return false;
+  saveFaceDescriptor(matric, descriptor) {
+    const list = JSON.parse(localStorage.getItem('studentProfiles')||'[]');
+    const idx = list.findIndex(s => s.matricNumber === matric);
+    if (idx === -1) return false;
+    list[idx].faceDescriptor = Array.from(descriptor);
+    list[idx].faceEnrolledAt = new Date().toISOString();
+    localStorage.setItem('studentProfiles', JSON.stringify(list));
+    return true;
   }
-  getFaceDescriptor(matricNumber) {
-    const s = this.getStudent(matricNumber);
+  getFaceDescriptor(matric) {
+    const s = this.getStudent(matric);
     return (s && s.faceDescriptor) ? new Float32Array(s.faceDescriptor) : null;
   }
-  isStudentEnrolled(matricNumber) {
-    const s = this.getStudent(matricNumber);
-    return !!(s && s.faceDescriptor);
-  }
+  isEnrolled(matric) { const s = this.getStudent(matric); return !!(s && s.faceDescriptor); }
+
   saveSession(s) {
     const ss = JSON.parse(localStorage.getItem('activeSessions')||'[]');
     ss.unshift(s); localStorage.setItem('activeSessions', JSON.stringify(ss.slice(0,20)));
@@ -1191,7 +1203,7 @@ function loadRecentSessions() {
 /* ================================================================
    PHASE 2 — FACE ID VERIFICATION (FACE RECOGNITION)
    Libraries: html5-qrcode (scanning), face-api.js (full pipeline)
-   Models: tinyFaceDetector + faceLandmark68Net + faceRecognitionNet
+   Model: tinyFaceDetector only (~190KB — detection, no matching)
    Flow: Scan QR → Matric + Face capture → Descriptor match → Submit
    Face enrollment: Student Registration page (one-time setup)
    Match threshold: Euclidean distance < 0.5 = same person
@@ -1370,75 +1382,118 @@ function proceedToStep2() {
   document.getElementById('device-id').textContent = fingerprint + '...';
   document.getElementById('device-ip').textContent = simIP;
 
-  // ✅ Load face models NOW (Step 2 is visible so the loading indicator shows correctly)
-  loadFaceModels();
+  // ✅ Load all face models now — needed for full matching pipeline
+  // loadRegFaceModels loads all 3 models with progress; falls back to detection-only if heavy models fail
+  loadFaceModels(); // tinyFaceDetector first (fast)
+  if (!regFaceModelsLoaded) loadRegFaceModels().catch(()=>{}); // landmark+recognition in background
 
   // Wire up form
   wireStep2Form();
 }
 
 /* ---- FACE-API.JS ---- */
-
-// CDN mirrors tried in order — first to respond wins
-const MODEL_CDNS = [
+const FACE_CDNS = [
   'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights',
-  'https://unpkg.com/face-api.js@0.22.2/weights',
-  'https://cdn.rawgit.com/justadudewhohacks/face-api.js/0.22.2/weights'
+  'https://unpkg.com/face-api.js@0.22.2/weights'
 ];
 
-let faceDetectionOnly = false; // true when only tinyFaceDetector loaded
-
-function tryLoadFromCDN(net, cdns, timeout = 8000) {
-  return new Promise(async (resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('timeout')), timeout);
-    for (const cdn of cdns) {
-      try {
-        await net.loadFromUri(cdn);
-        clearTimeout(timer);
-        return resolve(cdn);
-      } catch(e) { /* try next */ }
-    }
-    clearTimeout(timer);
-    reject(new Error('all CDNs failed'));
-  });
+async function tryNet(net, label, timeout = 12000) {
+  for (const cdn of FACE_CDNS) {
+    try {
+      const t = new Promise((_, r) => setTimeout(() => r(new Error('timeout')), timeout));
+      await Promise.race([net.loadFromUri(cdn), t]);
+      return true;
+    } catch(e) { /* try next */ }
+  }
+  return false;
 }
 
+// ── Attendance page face loading (detection-only indicator) ──
 async function loadFaceModels() {
   if (faceModelsLoaded) { hideFaceLoading(); return; }
-
   setFaceLoadingStatus('loading', 'Loading face detection model...');
-
-  // ── Stage 1: Load tinyFaceDetector only (small, fast ~190KB) ──
-  try {
-    await tryLoadFromCDN(faceapi.nets.tinyFaceDetector, MODEL_CDNS, 10000);
-    faceDetectionOnly = true;
-    setFaceLoadingStatus('loading', 'Face detection ready. Loading recognition model...');
-  } catch(e) {
-    faceModelsLoaded = false;
-    faceDetectionOnly = false;
+  const ok = await tryNet(faceapi.nets.tinyFaceDetector, 'tinyFaceDetector', 12000);
+  if (ok) { faceModelsLoaded = true; hideFaceLoading(); }
+  else {
     setFaceLoadingStatus('warn',
-      'Could not load face models (network issue). Camera works — face detection disabled. ' +
+      'Face model failed to load. Camera still works — face check disabled. ' +
       '<button onclick="loadFaceModels()" class="underline font-medium ml-1">Retry</button>');
-    return;
+  }
+}
+
+// ── Registration page face loading (all 3 models, with progress UI) ──
+async function loadRegFaceModels() {
+  // If already loaded (shared state) — skip straight away
+  if (faceModelsLoaded && regFaceModelsLoaded) {
+    setRegModelStatus('done'); return;
   }
 
-  // ── Stage 2: Load landmark + recognition nets (heavier ~7MB) ──
-  // These load in background — detection already works from Stage 1
-  try {
-    await Promise.all([
-      tryLoadFromCDN(faceapi.nets.faceLandmark68Net, MODEL_CDNS, 15000),
-      tryLoadFromCDN(faceapi.nets.faceRecognitionNet, MODEL_CDNS, 15000)
-    ]);
-    faceModelsLoaded = true;
-    faceDetectionOnly = false;
-    hideFaceLoading();
-  } catch(e) {
-    // Detection works but matching won't — hide spinner, show soft warning
-    faceModelsLoaded = false;
-    setFaceLoadingStatus('warn',
-      'Face detected ✓ — full identity matching unavailable (model load failed). ' +
-      'Attendance can still be submitted. ' +
-      '<button onclick="loadFaceModels()" class="underline font-medium ml-1">Retry</button>');
+  const setDot = (id, state) => {
+    const dot = document.getElementById('reg-dot-' + id);
+    const lbl = document.getElementById('reg-' + id + '-status');
+    if (!dot || !lbl) return;
+    const cls = { loading: 'bg-blue-400 animate-pulse', done: 'bg-green-500', fail: 'bg-red-400', wait: 'bg-gray-200' };
+    dot.className = 'w-3 h-3 rounded-full flex-shrink-0 ' + (cls[state] || cls.wait);
+    lbl.textContent = state === 'loading' ? 'loading...' : state === 'done' ? '✓ ready' : state === 'fail' ? '✗ failed' : 'waiting';
+    lbl.className = 'ml-auto text-xs ' + (state === 'done' ? 'text-green-600 font-medium' : state === 'fail' ? 'text-red-500' : 'text-gray-400');
+  };
+
+  const setBar = (pct) => {
+    const bar = document.getElementById('reg-model-bar');
+    const pctEl = document.getElementById('reg-model-pct');
+    if (bar) bar.style.width = pct + '%';
+    if (pctEl) pctEl.textContent = pct + '%';
+  };
+
+  setBar(0);
+  setDot('tiny', 'wait'); setDot('lm', 'wait'); setDot('rec', 'wait');
+
+  // Model 1 — tinyFaceDetector (~190KB, fast)
+  if (!faceapi.nets.tinyFaceDetector.isLoaded) {
+    setDot('tiny', 'loading'); setBar(5);
+    const ok = await tryNet(faceapi.nets.tinyFaceDetector, 'tiny', 12000);
+    setDot('tiny', ok ? 'done' : 'fail');
+    if (!ok) { setRegModelStatus('fail', 'Face detector failed — check internet connection.'); return; }
+  } else { setDot('tiny', 'done'); }
+  setBar(30);
+
+  // Model 2 — faceLandmark68Net (~350KB, medium)
+  if (!faceapi.nets.faceLandmark68Net.isLoaded) {
+    setDot('lm', 'loading'); setBar(35);
+    const ok = await tryNet(faceapi.nets.faceLandmark68Net, 'lm', 15000);
+    setDot('lm', ok ? 'done' : 'fail');
+    if (!ok) { setRegModelStatus('fail', 'Landmark model failed — check internet connection.'); return; }
+  } else { setDot('lm', 'done'); }
+  setBar(60);
+
+  // Model 3 — faceRecognitionNet (~6.2MB, heaviest)
+  if (!faceapi.nets.faceRecognitionNet.isLoaded) {
+    setDot('rec', 'loading'); setBar(65);
+    const ok = await tryNet(faceapi.nets.faceRecognitionNet, 'rec', 30000);
+    setDot('rec', ok ? 'done' : 'fail');
+    if (!ok) { setRegModelStatus('fail', 'Recognition model failed. This is the largest model (~6MB) — try on a faster connection.'); return; }
+  } else { setDot('rec', 'done'); }
+  setBar(100);
+
+  faceModelsLoaded = true;
+  regFaceModelsLoaded = true;
+  setRegModelStatus('done');
+}
+
+function setRegModelStatus(state, msg) {
+  const el = document.getElementById('reg-model-status');
+  if (!el) return;
+  if (state === 'done') {
+    el.className = 'rounded-xl border border-green-200 bg-green-50 px-4 py-3 mb-4 text-sm';
+    el.innerHTML = '<div class="flex items-center gap-2 text-green-700 font-semibold">'
+      + '<i class="ri-checkbox-circle-fill text-green-500"></i> All face models loaded — camera ready</div>';
+  } else if (state === 'fail') {
+    el.className = 'rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-4 text-sm';
+    el.innerHTML = '<div class="flex items-start gap-2 text-red-700">'
+      + '<i class="ri-error-warning-line text-red-500 flex-shrink-0 mt-0.5"></i>'
+      + '<div><p class="font-medium">Model load failed</p>'
+      + '<p class="text-xs mt-1 text-red-600">' + (msg||'') + '</p>'
+      + '<button onclick="loadRegFaceModels()" class="mt-2 text-xs underline font-medium text-red-700">Retry</button></div></div>';
   }
 }
 
@@ -1502,8 +1557,7 @@ function wireStep2Form() {
     const video = document.getElementById('camera-video');
     const canvas = document.getElementById('camera-canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    canvas.width = video.videoWidth; canvas.height = video.videoHeight;
     ctx.drawImage(video, 0, 0);
     capturedImageData = canvas.toDataURL('image/jpeg', 0.85);
 
@@ -1513,11 +1567,9 @@ function wireStep2Form() {
     captureBtn.classList.add('hidden');
     retakeBtn.classList.remove('hidden');
     document.getElementById('face-badge').classList.add('hidden');
-    setCamStatus('matching', 'Verifying identity...');
 
-    // ── PHASE 2: Face descriptor matching ──
     const matric = document.getElementById('matric-number').value.trim();
-    await runFaceMatch(video, canvas, matric);
+    await runFaceMatch(canvas, matric);
   };
 
   retakeBtn.onclick = function() {
@@ -1647,80 +1699,68 @@ function showFaceResult(success, msg) {
   el.classList.remove('hidden');
 }
 
-/* ── PHASE 2: Face descriptor matching ── */
+
+
+/* ── Face matching ── */
 let faceMatchPassed = false;
-const MATCH_THRESHOLD = 0.52; // Euclidean distance — lower = stricter
+const MATCH_THRESHOLD = 0.52;
 
-async function runFaceMatch(video, canvas, matric) {
-  const resultEl = document.getElementById('face-result');
-
-  // Show processing spinner
-  showFaceResult(null, '<span class="flex items-center gap-2"><span class="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></span> Verifying identity against enrolled face...</span>');
+async function runFaceMatch(canvas, matric) {
+  showFaceResult(null, '<span class="flex items-center gap-2"><span class="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin inline-block"></span> Verifying identity...</span>');
+  setCamStatus('matching', 'Verifying...');
 
   try {
-    const enrolledDescriptor = storage.getFaceDescriptor(matric);
-
-    if (!enrolledDescriptor) {
-      // No enrolled face — allow through but flag as unverified (graceful for demo)
+    // No enrolled descriptor — allow through as unverified
+    const enrolled = storage.getFaceDescriptor(matric);
+    if (!enrolled) {
       faceMatchPassed = false;
       setCamStatus('captured', 'Photo Captured');
       showFaceResult(false,
-        'No enrolled face found for ' + (matric || 'this ID') +
-        '. <a href="#" onclick="showPage('student-register');return false;" class="underline text-blue-600">Register first</a> for full verification. Proceeding as unverified.');
-      validateStep2Submit();
-      return;
+        'No enrolled face for this ID. ' +
+        '<a href="#" onclick="showPage(\'student-register\');return false;" class="underline text-blue-600 font-medium">Register first</a> for identity verification. Proceeding unverified.');
+      validateStep2Submit(); return;
     }
 
     if (!faceModelsLoaded) {
-      // Models not loaded — skip matching, allow through
       faceMatchPassed = false;
       setCamStatus('captured', 'Photo Captured');
-      showFaceResult(false, 'Face models not loaded — proceeding without identity check.');
-      validateStep2Submit();
-      return;
+      showFaceResult(false, 'Face models not ready — proceeding unverified.');
+      validateStep2Submit(); return;
     }
 
-    // Compute descriptor from live capture
-    const detection = await faceapi
+    // Full recognition pipeline
+    const det = await faceapi
       .detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
       .withFaceLandmarks()
       .withFaceDescriptor();
 
-    if (!detection) {
+    if (!det) {
       faceMatchPassed = false;
       setCamStatus('off', 'No Face');
-      showFaceResult(false, 'Could not extract face features. Please retake your photo in better lighting.');
-      validateStep2Submit();
-      return;
+      showFaceResult(false, 'Could not extract face features. Retake in better lighting.');
+      capturedImageData = null;
+      validateStep2Submit(); return;
     }
 
-    // Euclidean distance between descriptors
-    const distance = faceapi.euclideanDistance(detection.descriptor, enrolledDescriptor);
-    const matched = distance < MATCH_THRESHOLD;
-    const confidence = Math.round(Math.max(0, (1 - distance / MATCH_THRESHOLD)) * 100);
+    const dist = faceapi.euclideanDistance(det.descriptor, enrolled);
+    const matched = dist < MATCH_THRESHOLD;
+    const conf = Math.round(Math.max(0, (1 - dist / MATCH_THRESHOLD)) * 100);
     faceMatchPassed = matched;
 
-    setCamStatus(matched ? 'captured' : 'off', matched ? 'Identity Verified' : 'Match Failed');
-
     if (matched) {
-      const student = storage.getStudent(matric);
-      showFaceResult(true,
-        'Identity verified — ' + (student ? student.fullName : matric) +
-        ' (' + confidence + '% confidence)');
+      const st = storage.getStudent(matric);
+      setCamStatus('captured', 'Identity Verified');
+      showFaceResult(true, 'Identity verified — ' + (st ? st.fullName : matric) + ' (' + conf + '% confidence)');
     } else {
-      showFaceResult(false,
-        'Face does not match enrolled photo (distance: ' + distance.toFixed(3) + '). ' +
-        'Please retake or ensure correct matric number.');
-      capturedImageData = null; // force retake
+      setCamStatus('off', 'Match Failed');
+      showFaceResult(false, 'Face does not match enrolled photo. Please retake or check matric number.');
+      capturedImageData = null;
     }
-
   } catch(err) {
-    // Unexpected error — degrade gracefully
     faceMatchPassed = false;
     setCamStatus('captured', 'Photo Captured');
-    showFaceResult(false, 'Verification error — proceeding unverified. (' + err.message + ')');
+    showFaceResult(false, 'Verification error — proceeding unverified.');
   }
-
   validateStep2Submit();
 }
 
@@ -1760,7 +1800,7 @@ function submitAttendance() {
     status: 'Present',
     ipAddress: simIP,
     deviceFingerprint: fingerprint,
-    faceVerified: true,
+    faceVerified: faceMatchPassed || faceDetected,
     qrVerified: true
   });
 
@@ -2033,153 +2073,75 @@ function exportPDF() {
 </script>
 
 
+
 <script>
 /* ================================================================
-   STUDENT REGISTRATION — Face Enrollment
-   Extracts a 128-dim face descriptor using faceRecognitionNet
-   and stores it against the student's matric number.
-   On attendance, descriptor is compared via euclidean distance.
+   STUDENT REGISTRATION — Face Enrollment Script
    ================================================================ */
-
 let regCameraStream = null;
 let regFaceDetectionInterval = null;
 let regFaceDetected = false;
-let regCapturedDescriptor = null;
-let regCapturedImageData = null;
 let regFaceModelsLoaded = false;
+let regDescriptor = null;
 
 function initRegPage() {
-  resetRegFlow();
-  // NOTE: face models loaded lazily inside wireRegCamera
-  // (only when the camera step is actually visible)
+  resetRegPage();
+  // Don't load models yet — wait until user proceeds to camera step
 }
 
-function resetRegFlow() {
+function resetRegPage() {
   stopRegCamera();
-  regCapturedDescriptor = null;
-  regCapturedImageData = null;
+  regDescriptor = null;
   regFaceDetected = false;
+  const els = ['reg-step-face','reg-success-banner','reg-processing','reg-result','reg-cam-controls','reg-face-badge'];
+  els.forEach(id => { const e = document.getElementById(id); if (e) e.classList.add('hidden'); });
   document.getElementById('reg-step-details').classList.remove('hidden');
-  document.getElementById('reg-step-face').classList.add('hidden');
-  document.getElementById('reg-enrolled-banner').classList.add('hidden');
-  // Reset camera UI
   const vid = document.getElementById('reg-video');
   const cvs = document.getElementById('reg-canvas');
-  const ph  = document.getElementById('reg-placeholder');
-  if (vid) { vid.classList.add('hidden'); }
-  if (cvs) { cvs.classList.add('hidden'); }
-  if (ph)  { ph.classList.remove('hidden'); }
-  const cc = document.getElementById('reg-capture-controls');
-  if (cc) cc.classList.add('hidden');
-  const rb = document.getElementById('reg-result');
-  if (rb) rb.classList.add('hidden');
-  const eb = document.getElementById('reg-enroll-btn');
-  if (eb) eb.classList.add('hidden');
-}
-
-async function loadRegFaceModels() {
-  const loadEl = document.getElementById('reg-face-loading');
-
-  if (regFaceModelsLoaded || faceModelsLoaded) {
-    regFaceModelsLoaded = true;
-    faceModelsLoaded = true;
-    if (loadEl) loadEl.classList.add('hidden');
-    return;
-  }
-
-  // Show loading status
-  if (loadEl) {
-    loadEl.classList.remove('hidden');
-    loadEl.className = 'bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-4 flex items-center gap-3';
-    loadEl.innerHTML = '<div class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>'
-      + '<span class="text-sm text-blue-700">Loading face recognition model (~5s)...</span>';
-  }
-
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('timeout')), 20000)
-  );
-
-  // Stage 1: tinyFaceDetector (fast)
-  try {
-    await tryLoadFromCDN(faceapi.nets.tinyFaceDetector, MODEL_CDNS, 10000);
-    if (loadEl) {
-      loadEl.innerHTML = '<div class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>'
-        + '<span class="text-sm text-blue-700">Almost there — loading recognition model...</span>';
-    }
-  } catch(e) {
-    regFaceModelsLoaded = false;
-    if (loadEl) {
-      loadEl.className = 'bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 mb-4 flex items-start gap-3';
-      loadEl.innerHTML = '<i class="ri-alert-line text-yellow-500 flex-shrink-0 mt-0.5"></i>'
-        + '<span class="text-sm text-yellow-700">Could not load face model. Check your connection and '
-        + '<button onclick="loadRegFaceModels()" class=\'underline font-medium\'>retry</button>.</span>';
-    }
-    return;
-  }
-
-  // Stage 2: landmark + recognition nets (heavier)
-  try {
-    await Promise.all([
-      tryLoadFromCDN(faceapi.nets.faceLandmark68Net, MODEL_CDNS, 15000),
-      tryLoadFromCDN(faceapi.nets.faceRecognitionNet, MODEL_CDNS, 15000)
-    ]);
-    regFaceModelsLoaded = true;
-    faceModelsLoaded = true;
-    if (loadEl) loadEl.classList.add('hidden');
-  } catch(e) {
-    regFaceModelsLoaded = false;
-    if (loadEl) {
-      loadEl.className = 'bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 mb-4 flex items-start gap-3';
-      loadEl.innerHTML = '<i class="ri-alert-line text-yellow-500 flex-shrink-0 mt-0.5"></i>'
-        + '<span class="text-sm text-yellow-700">Recognition model failed to load — face enrollment unavailable. '
-        + '<button onclick="loadRegFaceModels()" class=\'underline font-medium\'>Retry</button></span>';
-    }
-  }
+  const ph  = document.getElementById('reg-cam-placeholder');
+  if (vid) vid.classList.add('hidden');
+  if (cvs) cvs.classList.add('hidden');
+  if (ph)  ph.classList.remove('hidden');
+  const sb = document.getElementById('reg-save-btn');
+  if (sb) sb.classList.add('hidden');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  // Next button: validate details → go to face step
   const nextBtn = document.getElementById('reg-next-btn');
-  if (nextBtn) {
-    nextBtn.addEventListener('click', function() {
-      const name  = document.getElementById('reg-fullname').value.trim();
-      const matric = document.getElementById('reg-matric').value.trim();
-      const dept  = document.getElementById('reg-dept').value.trim();
+  if (!nextBtn) return;
 
-      if (!name)   { showRegMsg('Please enter your full name.', 'error'); return; }
-      if (!matric || matric.length < 4) { showRegMsg('Please enter a valid matric number.', 'error'); return; }
-      if (!dept)   { showRegMsg('Please enter your department.', 'error'); return; }
+  nextBtn.addEventListener('click', function() {
+    const name  = (document.getElementById('reg-fullname').value || '').trim();
+    const matric = (document.getElementById('reg-matric').value || '').trim();
+    const dept  = (document.getElementById('reg-dept').value || '').trim();
+    const errEl = document.getElementById('reg-details-error');
 
-      // Check if already enrolled
-      const existing = storage.getStudent(matric);
-      if (existing && existing.faceDescriptor) {
-        // Show re-enroll option
-        showRegMsg('This matric number already has a face enrolled. You can re-enroll below.', 'warning');
-      }
+    const showErr = (msg) => { errEl.textContent = msg; errEl.classList.remove('hidden'); setTimeout(()=>errEl.classList.add('hidden'), 4000); };
 
-      // Save basic info first
-      storage.registerStudent({ matricNumber: matric, fullName: name, department: dept });
+    if (!name)   { showErr('Please enter your full name.'); return; }
+    if (matric.length < 4) { showErr('Please enter a valid matric number.'); return; }
+    if (!dept)   { showErr('Please enter your department.'); return; }
 
-      // Go to face step
-      document.getElementById('reg-preview-name').textContent = name;
-      document.getElementById('reg-preview-matric').textContent = matric + ' — ' + dept;
-      document.getElementById('reg-step-details').classList.add('hidden');
-      document.getElementById('reg-step-face').classList.remove('hidden');
+    // Save basic profile
+    storage.registerStudent({ matricNumber: matric, fullName: name, department: dept });
 
-      // Wire up face registration camera
-      wireRegCamera(matric, name);
-    });
-  }
+    // Show face step
+    document.getElementById('reg-chip-name').textContent = name;
+    document.getElementById('reg-chip-matric').textContent = matric + ' — ' + dept;
+    document.getElementById('reg-step-details').classList.add('hidden');
+    document.getElementById('reg-step-face').classList.remove('hidden');
+
+    // NOW load face models (progress bar is visible)
+    loadRegFaceModels();
+    wireRegCamera(matric, name);
+  });
 });
 
 function wireRegCamera(matric, name) {
-  // Load models now — face step is visible
-  loadRegFaceModels();
-
-  const startBtn   = document.getElementById('reg-start-camera-btn');
+  const startBtn   = document.getElementById('reg-start-cam-btn');
   const captureBtn = document.getElementById('reg-capture-btn');
   const retakeBtn  = document.getElementById('reg-retake-btn');
-  const enrollBtn  = document.getElementById('reg-enroll-btn');
+  const saveBtn    = document.getElementById('reg-save-btn');
 
   if (startBtn) {
     startBtn.onclick = async function() {
@@ -2190,216 +2152,175 @@ function wireRegCamera(matric, name) {
         const vid = document.getElementById('reg-video');
         vid.srcObject = regCameraStream;
         vid.classList.remove('hidden');
-        document.getElementById('reg-placeholder').classList.add('hidden');
+        document.getElementById('reg-cam-placeholder').classList.add('hidden');
         document.getElementById('reg-overlay').classList.remove('hidden');
-        document.getElementById('reg-capture-controls').classList.remove('hidden');
+        document.getElementById('reg-cam-controls').classList.remove('hidden');
         document.getElementById('reg-face-badge').classList.remove('hidden');
-        startRegFaceDetection();
-      } catch(err) {
-        showRegMsg('Camera access denied. Please allow permissions.', 'error');
+        startRegDetection();
+      } catch(e) {
+        alert('Camera access denied. Please allow camera permissions.');
       }
     };
   }
 
   if (captureBtn) {
     captureBtn.onclick = async function() {
-      if (!regFaceDetected) {
-        showRegMsg('No face detected. Please look directly at the camera.', 'error');
-        return;
-      }
-      stopRegFaceDetection();
+      if (!regFaceDetected) { alert('No face detected. Look directly at the camera.'); return; }
+      stopRegDetection();
 
       const vid = document.getElementById('reg-video');
       const cvs = document.getElementById('reg-canvas');
+      const ov  = document.getElementById('reg-overlay');
       const ctx = cvs.getContext('2d');
       cvs.width = vid.videoWidth; cvs.height = vid.videoHeight;
       ctx.drawImage(vid, 0, 0);
-      regCapturedImageData = cvs.toDataURL('image/jpeg', 0.85);
 
-      vid.classList.add('hidden');
-      document.getElementById('reg-overlay').classList.add('hidden');
-      cvs.classList.remove('hidden');
-      captureBtn.classList.add('hidden');
-      retakeBtn.classList.remove('hidden');
+      vid.classList.add('hidden'); ov.classList.add('hidden'); cvs.classList.remove('hidden');
+      captureBtn.classList.add('hidden'); retakeBtn.classList.remove('hidden');
       document.getElementById('reg-face-badge').classList.add('hidden');
 
-      // Show processing
       const procEl = document.getElementById('reg-processing');
       if (procEl) procEl.classList.remove('hidden');
 
-      // Extract face descriptor
       try {
-        const detection = await faceapi
+        if (!regFaceModelsLoaded) throw new Error('Face models not loaded yet — wait for progress bar to complete.');
+
+        const det = await faceapi
           .detectSingleFace(cvs, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
           .withFaceLandmarks()
           .withFaceDescriptor();
 
         if (procEl) procEl.classList.add('hidden');
 
-        if (!detection) {
-          showRegResult(false, 'No face features could be extracted. Please retake in better lighting.');
-          regCapturedDescriptor = null;
-          // Reset to allow retake
-          retakeBtn.classList.add('hidden');
-          captureBtn.classList.remove('hidden');
-          vid.classList.remove('hidden');
-          document.getElementById('reg-overlay').classList.remove('hidden');
-          cvs.classList.add('hidden');
-          startRegFaceDetection();
+        if (!det) {
+          showRegResult(false, 'No face features extracted. Retake in better lighting.');
+          resetCamForRetake();
           return;
         }
 
-        regCapturedDescriptor = detection.descriptor;
-        showRegResult(true, 'Face descriptor extracted successfully (' + detection.descriptor.length + ' features). Click below to save.');
-        if (enrollBtn) enrollBtn.classList.remove('hidden');
+        regDescriptor = det.descriptor;
+        showRegResult(true, 'Face descriptor extracted (' + det.descriptor.length + ' features). Click Save to complete registration.');
+        if (saveBtn) saveBtn.classList.remove('hidden');
 
       } catch(err) {
         if (procEl) procEl.classList.add('hidden');
-        showRegResult(false, 'Extraction error: ' + err.message);
+        showRegResult(false, err.message);
+        resetCamForRetake();
       }
     };
   }
 
   if (retakeBtn) {
     retakeBtn.onclick = function() {
-      regCapturedDescriptor = null;
-      regCapturedImageData = null;
-      const vid = document.getElementById('reg-video');
-      const cvs = document.getElementById('reg-canvas');
-      vid.classList.remove('hidden');
-      document.getElementById('reg-overlay').classList.remove('hidden');
-      cvs.classList.add('hidden');
-      captureBtn.classList.remove('hidden');
-      retakeBtn.classList.add('hidden');
-      if (enrollBtn) enrollBtn.classList.add('hidden');
+      regDescriptor = null;
+      resetCamForRetake();
+      if (saveBtn) saveBtn.classList.add('hidden');
       const rb = document.getElementById('reg-result');
       if (rb) rb.classList.add('hidden');
-      document.getElementById('reg-face-badge').classList.remove('hidden');
-      startRegFaceDetection();
     };
   }
 
-  if (enrollBtn) {
-    enrollBtn.onclick = function() {
-      if (!regCapturedDescriptor) {
-        showRegMsg('No face descriptor available. Please capture again.', 'error');
-        return;
-      }
-      const saved = storage.saveFaceDescriptor(matric, regCapturedDescriptor);
-      if (saved) {
-        stopRegCamera();
-        // Show success banner
-        document.getElementById('reg-step-face').classList.add('hidden');
-        const banner = document.getElementById('reg-enrolled-banner');
-        const bannerName = document.getElementById('reg-enrolled-name');
-        const bannerDate = document.getElementById('reg-enrolled-date');
-        bannerName.textContent = name + ' (' + matric + ') — enrolled successfully';
-        bannerDate.textContent = 'Enrolled: ' + new Date().toLocaleString();
-        banner.classList.remove('hidden');
-        // Show details step in case they want to register another
-        setTimeout(function() {
-          document.getElementById('reg-step-details').classList.remove('hidden');
-          document.getElementById('reg-fullname').value = '';
-          document.getElementById('reg-matric').value = '';
-          document.getElementById('reg-dept').value = '';
-        }, 400);
-      } else {
-        showRegMsg('Could not save — matric number not found in system. Register the student profile first.', 'error');
-      }
+  if (saveBtn) {
+    saveBtn.onclick = function() {
+      if (!regDescriptor) { alert('No face captured yet.'); return; }
+      const saved = storage.saveFaceDescriptor(matric, regDescriptor);
+      if (!saved) { alert('Could not save — matric number not found in system.'); return; }
+
+      // Show success
+      stopRegCamera();
+      document.getElementById('reg-step-face').classList.add('hidden');
+      document.getElementById('reg-success-name').textContent = name + ' (' + matric + ')';
+      document.getElementById('reg-success-date').textContent = 'Enrolled: ' + new Date().toLocaleString();
+      document.getElementById('reg-success-banner').classList.remove('hidden');
+      document.getElementById('reg-step-details').classList.remove('hidden');
+
+      // Clear form for next student
+      ['reg-fullname','reg-matric','reg-dept'].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = '';
+      });
+      regDescriptor = null;
     };
   }
 }
 
-function startRegFaceDetection() {
-  stopRegFaceDetection();
+function resetCamForRetake() {
   const vid = document.getElementById('reg-video');
-  const overlay = document.getElementById('reg-overlay');
-  const badge = document.getElementById('reg-face-badge');
-  const badgeText = document.getElementById('reg-face-badge-text');
+  const cvs = document.getElementById('reg-canvas');
+  const ov  = document.getElementById('reg-overlay');
   const captureBtn = document.getElementById('reg-capture-btn');
-  if (!vid || !overlay) return;
+  const retakeBtn  = document.getElementById('reg-retake-btn');
+  if (vid) vid.classList.remove('hidden');
+  if (cvs) cvs.classList.add('hidden');
+  if (ov)  ov.classList.remove('hidden');
+  if (captureBtn) { captureBtn.classList.remove('hidden'); captureBtn.disabled = true; }
+  if (retakeBtn)  retakeBtn.classList.add('hidden');
+  document.getElementById('reg-face-badge').classList.remove('hidden');
+  startRegDetection();
+}
+
+function startRegDetection() {
+  stopRegDetection();
+  const vid = document.getElementById('reg-video');
+  const ov  = document.getElementById('reg-overlay');
+  const badge = document.getElementById('reg-badge-text');
+  const captureBtn = document.getElementById('reg-capture-btn');
+  if (!vid || !ov) return;
 
   regFaceDetectionInterval = setInterval(async function() {
-    if (!regFaceModelsLoaded || vid.paused || vid.ended || vid.videoWidth === 0) return;
+    if (!faceModelsLoaded || vid.paused || vid.videoWidth === 0) return;
     try {
-      const detections = await faceapi.detectAllFaces(vid, new faceapi.TinyFaceDetectorOptions({
-        inputSize: 224, scoreThreshold: 0.4
-      }));
+      const dets = await faceapi.detectAllFaces(vid, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }));
+      const ds = { width: vid.clientWidth, height: vid.clientHeight };
+      faceapi.matchDimensions(ov, ds);
+      const resized = faceapi.resizeResults(dets, ds);
+      const ctx = ov.getContext('2d');
+      ctx.clearRect(0, 0, ov.width, ov.height);
 
-      const displaySize = { width: vid.clientWidth, height: vid.clientHeight };
-      faceapi.matchDimensions(overlay, displaySize);
-      const resized = faceapi.resizeResults(detections, displaySize);
-
-      const ctx = overlay.getContext('2d');
-      ctx.clearRect(0, 0, overlay.width, overlay.height);
-
-      if (detections.length > 0) {
+      if (dets.length === 1) {
         regFaceDetected = true;
-        resized.forEach(function(det) {
-          const box = det.box;
-          ctx.strokeStyle = '#3B82F6';
-          ctx.lineWidth = 2.5;
-          ctx.beginPath();
-          ctx.roundRect ? ctx.roundRect(box.x, box.y, box.width, box.height, 8) : ctx.rect(box.x, box.y, box.width, box.height);
-          ctx.stroke();
-          const cs = 16;
-          ctx.strokeStyle = '#1D4ED8'; ctx.lineWidth = 3;
-          [[box.x,box.y],[box.x+box.width-cs,box.y],[box.x,box.y+box.height-cs],[box.x+box.width-cs,box.y+box.height-cs]]
-            .forEach(function([cx,cy]) { ctx.beginPath(); ctx.moveTo(cx,cy+cs); ctx.lineTo(cx,cy); ctx.lineTo(cx+cs,cy); ctx.stroke(); });
-        });
-        if (detections.length > 1) {
-          badgeText.textContent = '⚠ Multiple faces detected — only one person please';
-          badgeText.className = 'text-xs px-3 py-1.5 rounded-full font-medium bg-yellow-600/80 text-white backdrop-blur-sm';
-          captureBtn.disabled = true;
-          regFaceDetected = false;
-        } else {
-          badgeText.textContent = '✓ Face detected — ready to enroll';
-          badgeText.className = 'text-xs px-3 py-1.5 rounded-full font-medium bg-blue-600/80 text-white backdrop-blur-sm';
-          captureBtn.disabled = false;
-        }
+        const box = resized[0].box;
+        ctx.strokeStyle = '#3B82F6'; ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.roundRect ? ctx.roundRect(box.x, box.y, box.width, box.height, 8) : ctx.rect(box.x, box.y, box.width, box.height);
+        ctx.stroke();
+        const cs = 16; ctx.strokeStyle = '#1D4ED8'; ctx.lineWidth = 3;
+        [[box.x,box.y],[box.x+box.width-cs,box.y],[box.x,box.y+box.height-cs],[box.x+box.width-cs,box.y+box.height-cs]]
+          .forEach(([cx,cy]) => { ctx.beginPath(); ctx.moveTo(cx,cy+cs); ctx.lineTo(cx,cy); ctx.lineTo(cx+cs,cy); ctx.stroke(); });
+        if (badge) { badge.textContent = '✓ Face detected — ready to enroll'; badge.className = 'text-xs px-3 py-1.5 rounded-full font-medium bg-blue-600/80 text-white'; }
+        if (captureBtn) captureBtn.disabled = false;
+      } else if (dets.length > 1) {
+        regFaceDetected = false;
+        if (badge) { badge.textContent = '⚠ Multiple faces — one person only'; badge.className = 'text-xs px-3 py-1.5 rounded-full font-medium bg-yellow-600/80 text-white'; }
+        if (captureBtn) captureBtn.disabled = true;
       } else {
         regFaceDetected = false;
-        badgeText.textContent = 'No face detected — look at the camera';
-        badgeText.className = 'text-xs px-3 py-1.5 rounded-full font-medium bg-black/60 text-white backdrop-blur-sm';
-        captureBtn.disabled = true;
+        if (badge) { badge.textContent = 'No face — look at the camera'; badge.className = 'text-xs px-3 py-1.5 rounded-full font-medium bg-black/60 text-white'; }
+        if (captureBtn) captureBtn.disabled = true;
       }
-    } catch(e) {
-      regFaceDetected = true;
-      if (captureBtn) captureBtn.disabled = false;
-    }
+    } catch(e) { regFaceDetected = true; if (captureBtn) captureBtn.disabled = false; }
   }, 400);
 }
 
-function stopRegFaceDetection() {
+function stopRegDetection() {
   if (regFaceDetectionInterval) { clearInterval(regFaceDetectionInterval); regFaceDetectionInterval = null; }
 }
 
 function stopRegCamera() {
-  stopRegFaceDetection();
+  stopRegDetection();
   if (regCameraStream) { regCameraStream.getTracks().forEach(t => t.stop()); regCameraStream = null; }
-}
-
-function showRegMsg(msg, type) {
-  // Reuse attendance message or alert
-  alert(type.toUpperCase() + ': ' + msg);
 }
 
 function showRegResult(success, msg) {
   const el = document.getElementById('reg-result');
   if (!el) return;
-  el.className = (success
-    ? 'bg-green-50 border border-green-200 text-green-700'
-    : 'bg-red-50 border border-red-200 text-red-700')
-    + ' px-4 py-3 rounded-lg text-sm flex items-start gap-2';
-  el.innerHTML = (success
-    ? '<i class="ri-checkbox-circle-fill text-green-500 flex-shrink-0 mt-0.5"></i>'
-    : '<i class="ri-close-circle-fill text-red-500 flex-shrink-0 mt-0.5"></i>')
+  el.className = (success ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700')
+    + ' px-4 py-3 rounded-lg text-sm flex items-start gap-2 mb-2';
+  el.innerHTML = (success ? '<i class="ri-checkbox-circle-fill text-green-500 flex-shrink-0 mt-0.5"></i>' : '<i class="ri-close-circle-fill text-red-500 flex-shrink-0 mt-0.5"></i>')
     + '<span>' + msg + '</span>';
   el.classList.remove('hidden');
 }
 
 window.addEventListener('beforeunload', function() { stopRegCamera(); });
 </script>
-
 </body>
 </html>
