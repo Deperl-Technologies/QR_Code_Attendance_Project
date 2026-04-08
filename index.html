@@ -6,11 +6,12 @@
 <title>QR Code-Based Student Attendance System</title>
 <script src="https://cdn.tailwindcss.com/3.4.16"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/face-api.js/0.22.2/face-api.min.js"></script>
+<script src="./js/face-api.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -427,152 +428,192 @@ input[type="checkbox"]:checked::after {
   </div>
 </div>
 
-<!-- STUDENT REGISTRATION — Face Enrollment -->
+<!-- STUDENT REGISTRATION -->
 <div id="student-register" class="page">
   <div class="min-h-screen bg-gray-50 px-4 py-8">
     <div class="w-full max-w-lg mx-auto">
-      <div class="bg-white rounded-2xl shadow-xl p-8">
-        <div class="text-center mb-8">
-          <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="ri-user-add-line text-3xl text-primary"></i>
+      <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+
+        <!-- Header -->
+        <div class="bg-primary px-8 pt-8 pb-6 text-white text-center">
+          <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i class="ri-user-add-line text-3xl text-white"></i>
           </div>
           <h2 class="text-2xl font-bold">Student Registration</h2>
-          <p class="text-gray-500 text-sm mt-1">Enroll your face for attendance verification</p>
+          <p class="text-blue-100 text-sm mt-1">Take your photo to register for attendance</p>
         </div>
 
-        <!-- Success banner -->
-        <div id="reg-success-banner" class="hidden bg-green-50 border border-green-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-          <i class="ri-checkbox-circle-fill text-green-500 text-xl flex-shrink-0 mt-0.5"></i>
-          <div>
-            <p id="reg-success-name" class="text-sm font-bold text-green-800">-</p>
-            <p class="text-xs text-green-700 mt-0.5">Face enrolled — you can now mark attendance</p>
-            <p id="reg-success-date" class="text-xs text-green-500 mt-0.5 font-mono">-</p>
-          </div>
-        </div>
+        <div class="p-8">
 
-        <!-- STEP A: Details form -->
-        <div id="reg-step-details">
-          <div class="space-y-4 mb-6">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-user-line text-gray-400"></i></div>
-                <input type="text" id="reg-fullname" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="e.g. Emily Chen">
+          <!-- ✅ Success banner — shown after successful save -->
+          <div id="reg-success-banner" class="hidden bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+            <div class="flex items-start gap-3 mb-3">
+              <i class="ri-checkbox-circle-fill text-green-500 text-xl flex-shrink-0 mt-0.5"></i>
+              <div>
+                <p id="reg-success-name" class="text-sm font-bold text-green-800">-</p>
+                <p class="text-xs text-green-700 mt-0.5">Registered successfully — you can now mark attendance</p>
+                <p id="reg-success-date" class="text-xs text-green-500 mt-1 font-mono">-</p>
               </div>
             </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Matric Number</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-id-card-line text-gray-400"></i></div>
-                <input type="text" id="reg-matric" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="e.g. CS2024001">
-              </div>
-              <p class="text-xs text-gray-400 mt-1">Pre-seeded: CS2024001 · CS2024002 · CS2024003</p>
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
-              <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-building-line text-gray-400"></i></div>
-                <input type="text" id="reg-dept" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="e.g. Computer Science">
+            <!-- Profile photo preview -->
+            <div class="flex items-center gap-3 bg-white border border-green-100 rounded-lg p-3">
+              <img id="reg-saved-photo" src="" alt="Profile photo"
+                class="w-16 h-16 rounded-lg object-cover border-2 border-green-300 flex-shrink-0">
+              <div class="text-xs text-gray-600">
+                <p class="font-semibold text-gray-800" id="reg-saved-name">-</p>
+                <p id="reg-saved-matric" class="text-gray-500">-</p>
+                <p class="text-green-600 font-medium mt-1">✓ Photo saved to profile</p>
               </div>
             </div>
-          </div>
-          <div id="reg-details-error" class="hidden bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg mb-4"></div>
-          <button id="reg-next-btn" type="button"
-            class="cursor-pointer !rounded-button w-full bg-primary text-white py-3 font-semibold hover:bg-blue-600 transition-colors text-sm flex items-center justify-center gap-2">
-            <i class="ri-camera-line"></i> Continue to Face Enrollment
-          </button>
-          <div class="mt-4 text-center">
-            <button onclick="showPage('landing-page')" class="cursor-pointer text-gray-400 hover:text-gray-600 text-sm">← Back to Home</button>
-          </div>
-        </div>
-
-        <!-- STEP B: Camera + face enrollment -->
-        <div id="reg-step-face" class="hidden">
-          <!-- Student info chip -->
-          <div class="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4 flex items-center gap-3">
-            <i class="ri-user-line text-blue-500"></i>
-            <div>
-              <p id="reg-chip-name" class="text-sm font-semibold text-blue-900">-</p>
-              <p id="reg-chip-matric" class="text-xs text-blue-600">-</p>
-            </div>
+            <button onclick="resetRegPage()" class="cursor-pointer mt-3 w-full text-center text-sm text-primary font-medium hover:text-blue-700">
+              Register another student
+            </button>
           </div>
 
-          <!-- Model loading progress — the key fix -->
-          <div id="reg-model-status" class="rounded-xl border px-4 py-3 mb-4 text-sm">
-            <div class="flex items-center justify-between mb-2">
-              <span class="font-medium text-gray-700">Loading face models</span>
-              <span id="reg-model-pct" class="text-xs font-mono text-primary">0%</span>
-            </div>
-            <div class="w-full bg-gray-100 rounded-full h-1.5 mb-3">
-              <div id="reg-model-bar" class="bg-primary h-1.5 rounded-full transition-all duration-500" style="width:0%"></div>
-            </div>
-            <div id="reg-model-steps" class="space-y-1 text-xs text-gray-500">
-              <div class="flex items-center gap-2" id="reg-step-tiny">
-                <div class="w-3 h-3 rounded-full bg-gray-200 flex-shrink-0" id="reg-dot-tiny"></div>
-                <span>Face detector (190 KB)</span>
-                <span id="reg-tiny-status" class="ml-auto text-gray-400">waiting</span>
-              </div>
-              <div class="flex items-center gap-2" id="reg-step-lm">
-                <div class="w-3 h-3 rounded-full bg-gray-200 flex-shrink-0" id="reg-dot-lm"></div>
-                <span>Landmark model (350 KB)</span>
-                <span id="reg-lm-status" class="ml-auto text-gray-400">waiting</span>
-              </div>
-              <div class="flex items-center gap-2" id="reg-step-rec">
-                <div class="w-3 h-3 rounded-full bg-gray-200 flex-shrink-0" id="reg-dot-rec"></div>
-                <span>Recognition model (6.2 MB)</span>
-                <span id="reg-rec-status" class="ml-auto text-gray-400">waiting</span>
-              </div>
-            </div>
-            <div id="reg-model-note" class="mt-2 text-xs text-gray-400">Models cache after first load — subsequent visits are instant.</div>
-          </div>
-
-          <!-- Camera viewport -->
-          <div class="relative bg-gray-900 rounded-xl overflow-hidden mb-3" style="aspect-ratio:4/3;">
-            <video id="reg-video" class="w-full h-full object-cover hidden" autoplay playsinline muted></video>
-            <canvas id="reg-overlay" class="absolute inset-0 w-full h-full hidden" style="pointer-events:none;"></canvas>
-            <canvas id="reg-canvas" class="w-full h-full object-cover hidden"></canvas>
-            <div id="reg-cam-placeholder" class="absolute inset-0 flex items-center justify-center">
-              <div class="text-center text-white">
-                <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/20">
-                  <i class="ri-camera-line text-2xl text-white/60"></i>
+          <!-- STEP 1: Student Details -->
+          <div id="reg-step-details">
+            <h3 class="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <span class="w-6 h-6 bg-primary text-white rounded-full text-xs flex items-center justify-center font-bold">1</span>
+              Enter your details
+            </h3>
+            <div class="space-y-4 mb-5">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-user-line text-gray-400"></i></div>
+                  <input type="text" id="reg-fullname" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="e.g. Emily Chen">
                 </div>
-                <p class="text-sm text-white/60 mb-4">Look directly at the camera</p>
-                <button type="button" id="reg-start-cam-btn"
-                  class="cursor-pointer !rounded-button bg-primary text-white px-6 py-2 text-sm font-semibold hover:bg-blue-600 transition-colors">
-                  Start Camera
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Matric Number</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-id-card-line text-gray-400"></i></div>
+                  <input type="text" id="reg-matric" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="e.g. CS2024001">
+                </div>
+                <p class="text-xs text-gray-400 mt-1">Pre-seeded demo IDs: CS2024001 · CS2024002 · CS2024003</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Department</label>
+                <div class="relative">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="ri-building-line text-gray-400"></i></div>
+                  <input type="text" id="reg-dept" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary text-sm" placeholder="e.g. Computer Science">
+                </div>
+              </div>
+            </div>
+            <div id="reg-details-error" class="hidden bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-lg mb-4"></div>
+            <button id="reg-next-btn" type="button"
+              class="cursor-pointer !rounded-button w-full bg-primary text-white py-3 font-semibold hover:bg-blue-600 transition-colors text-sm flex items-center justify-center gap-2">
+              <i class="ri-camera-line text-base"></i> Next — Take Your Photo
+            </button>
+            <div class="mt-4 text-center">
+              <button onclick="showPage('landing-page')" class="cursor-pointer text-gray-400 hover:text-gray-600 text-sm">← Back to Home</button>
+            </div>
+          </div>
+
+          <!-- STEP 2: Take Photo -->
+          <div id="reg-step-face" class="hidden">
+
+            <!-- Student chip -->
+            <div class="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-xl p-3 mb-5">
+              <!-- Live photo preview (fills when captured) -->
+              <div class="relative flex-shrink-0">
+                <img id="reg-photo-preview" src="" alt=""
+                  class="w-14 h-14 rounded-lg object-cover border-2 border-blue-200 hidden">
+                <div id="reg-photo-placeholder" class="w-14 h-14 rounded-lg bg-blue-100 border-2 border-blue-200 flex items-center justify-center">
+                  <i class="ri-user-line text-xl text-blue-400"></i>
+                </div>
+              </div>
+              <div class="min-w-0">
+                <p id="reg-chip-name" class="text-sm font-bold text-blue-900 truncate">-</p>
+                <p id="reg-chip-matric" class="text-xs text-blue-600">-</p>
+                <p id="reg-chip-status" class="text-xs text-blue-400 mt-0.5">No photo taken yet</p>
+              </div>
+            </div>
+
+            <h3 class="text-base font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <span class="w-6 h-6 bg-primary text-white rounded-full text-xs flex items-center justify-center font-bold">2</span>
+              Take your profile photo
+            </h3>
+
+            <!-- Model loading bar -->
+            <div id="reg-model-status" class="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 mb-4 text-sm">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-medium text-gray-600">Loading face detection models</span>
+                <span id="reg-model-pct" class="text-xs font-mono text-primary font-bold">0%</span>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                <div id="reg-model-bar" class="bg-primary h-2 rounded-full transition-all duration-500" style="width:0%"></div>
+              </div>
+              <div class="space-y-1 text-xs text-gray-400">
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-gray-200 flex-shrink-0" id="reg-dot-tiny"></div>
+                  <span>Face detector (190 KB)</span>
+                  <span id="reg-tiny-status" class="ml-auto">waiting</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-gray-200 flex-shrink-0" id="reg-dot-lm"></div>
+                  <span>Landmark model (350 KB)</span>
+                  <span id="reg-lm-status" class="ml-auto">waiting</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="w-2.5 h-2.5 rounded-full bg-gray-200 flex-shrink-0" id="reg-dot-rec"></div>
+                  <span>Recognition model (6.2 MB)</span>
+                  <span id="reg-rec-status" class="ml-auto text-blue-400">loaded at attendance</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Camera -->
+            <div class="relative bg-gray-900 rounded-xl overflow-hidden mb-3" style="aspect-ratio:4/3;">
+              <video id="reg-video" class="w-full h-full object-cover hidden" autoplay playsinline muted></video>
+              <canvas id="reg-overlay" class="absolute inset-0 w-full h-full hidden" style="pointer-events:none;"></canvas>
+              <canvas id="reg-canvas" class="w-full h-full object-cover hidden"></canvas>
+              <div id="reg-cam-placeholder" class="absolute inset-0 flex items-center justify-center">
+                <div class="text-center text-white">
+                  <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-3 border-2 border-white/20">
+                    <i class="ri-camera-line text-2xl text-white/60"></i>
+                  </div>
+                  <p class="text-sm text-white/60 mb-1">Position your face in the frame</p>
+                  <p class="text-xs text-white/40 mb-4">Good lighting helps accuracy</p>
+                  <button type="button" id="reg-start-cam-btn"
+                    class="cursor-pointer !rounded-button bg-primary text-white px-6 py-2.5 text-sm font-semibold hover:bg-blue-600 transition-colors">
+                    <i class="ri-camera-line mr-1"></i> Open Camera
+                  </button>
+                </div>
+              </div>
+              <div id="reg-face-badge" class="hidden absolute top-3 left-0 right-0 flex justify-center pointer-events-none">
+                <span id="reg-badge-text" class="text-xs px-3 py-1.5 rounded-full font-medium bg-black/60 text-white"></span>
+              </div>
+              <div id="reg-cam-controls" class="hidden absolute bottom-4 left-0 right-0 flex justify-center gap-3">
+                <button type="button" id="reg-capture-btn" disabled
+                  class="cursor-pointer !rounded-button bg-white text-gray-900 px-6 py-2.5 text-sm font-bold flex items-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors">
+                  <i class="ri-camera-fill text-primary text-base"></i> Take Picture
+                </button>
+                <button type="button" id="reg-retake-btn"
+                  class="cursor-pointer !rounded-button bg-gray-700/80 text-white px-5 py-2.5 text-sm font-semibold hover:bg-gray-700 transition-colors items-center gap-1.5 hidden">
+                  <i class="ri-refresh-line"></i> Retake
                 </button>
               </div>
             </div>
-            <div id="reg-face-badge" class="hidden absolute top-3 left-0 right-0 flex justify-center pointer-events-none">
-              <span id="reg-badge-text" class="text-xs px-3 py-1.5 rounded-full font-medium bg-black/60 text-white"></span>
+
+            <!-- Processing -->
+            <div id="reg-processing" class="hidden bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-3 flex items-center gap-3">
+              <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
+              <span class="text-sm text-blue-700">Checking for face in photo...</span>
             </div>
-            <div id="reg-cam-controls" class="hidden absolute bottom-4 left-0 right-0 flex justify-center gap-3">
-              <button type="button" id="reg-capture-btn" disabled
-                class="cursor-pointer !rounded-button bg-primary text-white px-5 py-2 text-sm font-semibold flex items-center gap-1.5 disabled:bg-gray-500 disabled:cursor-not-allowed hover:bg-blue-600 transition-colors">
-                <i class="ri-camera-fill"></i> Enroll Face
-              </button>
-              <button type="button" id="reg-retake-btn"
-                class="cursor-pointer !rounded-button bg-gray-700 text-white px-5 py-2 text-sm font-semibold hover:bg-gray-800 transition-colors items-center gap-1.5 hidden">
-                <i class="ri-refresh-line"></i> Retake
-              </button>
-            </div>
+            <div id="reg-result" class="hidden mb-3"></div>
+
+            <!-- Save button (appears after photo taken) -->
+            <button id="reg-save-btn" type="button"
+              class="cursor-pointer !rounded-button w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors text-sm hidden flex items-center justify-center gap-2">
+              <i class="ri-save-line"></i> Save to Student Profile
+            </button>
+
+            <button type="button" onclick="resetRegPage()"
+              class="cursor-pointer w-full text-gray-400 hover:text-gray-600 text-xs mt-3 text-center block">← Back to details</button>
           </div>
 
-          <!-- Processing + result -->
-          <div id="reg-processing" class="hidden bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-3 flex items-center gap-3">
-            <div class="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>
-            <span class="text-sm text-blue-700">Extracting face descriptor...</span>
-          </div>
-          <div id="reg-result" class="hidden mb-3"></div>
-          <button id="reg-save-btn" type="button"
-            class="cursor-pointer !rounded-button w-full bg-secondary text-white py-3 font-semibold hover:bg-green-600 transition-colors text-sm hidden flex items-center justify-center gap-2">
-            <i class="ri-save-line"></i> Save Registration
-          </button>
-
-          <button type="button" onclick="resetRegPage()"
-            class="cursor-pointer w-full text-gray-400 hover:text-gray-600 text-xs mt-3 text-center block">← Back to details</button>
         </div>
-
       </div>
     </div>
   </div>
@@ -859,6 +900,10 @@ function logout() {
 
 <script>
 /* ---- Storage ---- */
+const SUPABASE_URL = 'https://vkyuvgctctutrmscvtpa.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_tU6GaK15RMIMZC3hlu9bww_1mQzyMIu';
+const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
 class AttendanceStorage {
   constructor() { this._init(); }
   _init() {
@@ -887,46 +932,191 @@ class AttendanceStorage {
     const np = { id:'lec_'+Date.now(), ...d, status:'Active' };
     p.push(np); localStorage.setItem('lecturerProfiles', JSON.stringify(p)); return np;
   }
-  getStudent(m) { return JSON.parse(localStorage.getItem('studentProfiles')||'[]').find(s=>s.matricNumber===m); }
-  registerStudent(data) {
+  _mapStudentRow(row) {
+    if (!row) return null;
+    return {
+      id: row.id,
+      matricNumber: row.matric_number,
+      fullName: row.full_name,
+      department: row.department,
+      faceImageUrl: row.face_image_url || null,
+      faceEnrolledAt: row.face_enrolled_at || null
+    };
+  }
+  async getStudent(m) {
+    if (supabaseClient) {
+      const { data, error } = await supabaseClient.from('students')
+        .select('*')
+        .eq('matric_number', m)
+        .maybeSingle();
+      if (!error && data) return this._mapStudentRow(data);
+    }
+    return JSON.parse(localStorage.getItem('studentProfiles')||'[]').find(s=>s.matricNumber===m);
+  }
+  async registerStudent(data) {
+    if (supabaseClient) {
+      const payload = {
+        matric_number: data.matricNumber,
+        full_name: data.fullName,
+        department: data.department
+      };
+      const { error } = await supabaseClient.from('students').upsert(payload, { onConflict: 'matric_number' });
+      if (!error) return true;
+      console.warn('Supabase registerStudent fallback:', error.message);
+    }
     const list = JSON.parse(localStorage.getItem('studentProfiles')||'[]');
     const idx = list.findIndex(s => s.matricNumber === data.matricNumber);
     if (idx !== -1) { list[idx] = { ...list[idx], ...data }; }
     else { list.push({ id:'std_'+Date.now(), ...data }); }
     localStorage.setItem('studentProfiles', JSON.stringify(list));
+    return true;
   }
-  saveFaceDescriptor(matric, descriptor) {
+  async saveFaceDescriptor(matric, imageDataUrl) {
+    if (supabaseClient) {
+      const { error } = await supabaseClient
+        .from('students')
+        .update({ face_image_url: imageDataUrl, face_enrolled_at: new Date().toISOString() })
+        .eq('matric_number', matric);
+      if (!error) return true;
+      console.warn('Supabase saveFaceDescriptor fallback:', error.message);
+    }
+    // Stores the enrolled face IMAGE (base64). Descriptor computed at match time.
     const list = JSON.parse(localStorage.getItem('studentProfiles')||'[]');
     const idx = list.findIndex(s => s.matricNumber === matric);
     if (idx === -1) return false;
-    list[idx].faceDescriptor = Array.from(descriptor);
+    list[idx].faceImageUrl = imageDataUrl;
     list[idx].faceEnrolledAt = new Date().toISOString();
     localStorage.setItem('studentProfiles', JSON.stringify(list));
     return true;
   }
-  getFaceDescriptor(matric) {
-    const s = this.getStudent(matric);
-    return (s && s.faceDescriptor) ? new Float32Array(s.faceDescriptor) : null;
+  async getFaceImageUrl(matric) {
+    const s = await this.getStudent(matric);
+    return (s && s.faceImageUrl) ? s.faceImageUrl : null;
   }
-  isEnrolled(matric) { const s = this.getStudent(matric); return !!(s && s.faceDescriptor); }
+  async isEnrolled(matric) { const s = await this.getStudent(matric); return !!(s && s.faceImageUrl); }
 
-  saveSession(s) {
+  async saveSession(s) {
+    if (supabaseClient) {
+      const payload = {
+        session_id: s.sessionId,
+        course: s.course,
+        date: s.date,
+        time: s.time,
+        expires_at: new Date(s.expiresAt).toISOString(),
+        duration_mins: s.durationMins,
+        created_at: new Date(s.createdAt).toISOString()
+      };
+      const { error } = await supabaseClient.from('sessions').insert(payload);
+      if (!error) return true;
+      console.warn('Supabase saveSession fallback:', error.message);
+    }
     const ss = JSON.parse(localStorage.getItem('activeSessions')||'[]');
     ss.unshift(s); localStorage.setItem('activeSessions', JSON.stringify(ss.slice(0,20)));
+    return true;
   }
-  getActiveSession() {
+  async getActiveSession() {
+    if (supabaseClient) {
+      const { data, error } = await supabaseClient.from('sessions')
+        .select('*')
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (!error && data) {
+        return {
+          sessionId: data.session_id,
+          course: data.course,
+          date: data.date,
+          time: data.time,
+          expiresAt: new Date(data.expires_at).getTime(),
+          durationMins: data.duration_mins || 0,
+          createdAt: new Date(data.created_at).getTime()
+        };
+      }
+    }
     const ss = JSON.parse(localStorage.getItem('activeSessions')||'[]');
     return ss.find(s => s.expiresAt > Date.now()) || null;
   }
-  getAllSessions() { return JSON.parse(localStorage.getItem('activeSessions')||'[]'); }
-  addAttendance(r) {
+  async getAllSessions() {
+    if (supabaseClient) {
+      const { data, error } = await supabaseClient.from('sessions')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (!error && data) {
+        return data.map(s => ({
+          sessionId: s.session_id,
+          course: s.course,
+          date: s.date,
+          time: s.time,
+          expiresAt: new Date(s.expires_at).getTime(),
+          durationMins: s.duration_mins || 0,
+          createdAt: new Date(s.created_at).getTime()
+        }));
+      }
+    }
+    return JSON.parse(localStorage.getItem('activeSessions')||'[]');
+  }
+  async addAttendance(r) {
+    if (supabaseClient) {
+      const payload = {
+        session_id: r.sessionId,
+        course: r.course,
+        matric_number: r.matricNumber,
+        student_name: r.studentName,
+        date: r.date,
+        time: r.time,
+        timestamp: r.timestamp,
+        status: r.status,
+        ip_address: r.ipAddress,
+        device_fingerprint: r.deviceFingerprint,
+        face_verified: r.faceVerified,
+        qr_verified: r.qrVerified
+      };
+      const { error } = await supabaseClient.from('attendance_records').insert(payload);
+      if (!error) return true;
+      console.warn('Supabase addAttendance fallback:', error.message);
+    }
     const rs = JSON.parse(localStorage.getItem('attendanceRecords')||'[]');
     rs.unshift(r); localStorage.setItem('attendanceRecords', JSON.stringify(rs));
+    return true;
   }
-  hasDuplicate(matric, sid) {
+  async hasDuplicate(matric, sid) {
+    if (supabaseClient) {
+      const { data, error } = await supabaseClient.from('attendance_records')
+        .select('id')
+        .eq('matric_number', matric)
+        .eq('session_id', sid)
+        .limit(1);
+      if (!error) return (data || []).length > 0;
+    }
     return JSON.parse(localStorage.getItem('attendanceRecords')||'[]').some(r=>r.matricNumber===matric && r.sessionId===sid);
   }
-  getRecords(f={}) {
+  async getRecords(f={}) {
+    if (supabaseClient) {
+      let query = supabaseClient.from('attendance_records').select('*').order('timestamp', { ascending: false });
+      if (f.course) query = query.eq('course', f.course);
+      if (f.from) query = query.gte('date', f.from);
+      if (f.to) query = query.lte('date', f.to);
+      const { data, error } = await query;
+      if (!error && data) {
+        return data.map(r => ({
+          id: r.id,
+          sessionId: r.session_id,
+          course: r.course,
+          matricNumber: r.matric_number,
+          studentName: r.student_name,
+          date: r.date,
+          time: r.time,
+          timestamp: r.timestamp,
+          status: r.status,
+          ipAddress: r.ip_address,
+          deviceFingerprint: r.device_fingerprint,
+          faceVerified: r.face_verified,
+          qrVerified: r.qr_verified
+        }));
+      }
+    }
     let rs = JSON.parse(localStorage.getItem('attendanceRecords')||'[]');
     if (f.course) rs = rs.filter(r=>r.course===f.course);
     if (f.from) rs = rs.filter(r=>r.date>=f.from);
@@ -1064,7 +1254,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('download-qr-btn').addEventListener('click', downloadQRCode);
 });
 
-function buildQRSession(course) {
+async function buildQRSession(course) {
   clearQRTimer();
 
   const date = document.getElementById('session-date').value;
@@ -1074,7 +1264,7 @@ function buildQRSession(course) {
   const expiresAt = Date.now() + durationMins * 60 * 1000;
 
   const payload = { sessionId, course, date, time, expiresAt, durationMins, createdAt: Date.now() };
-  storage.saveSession(payload);
+  await storage.saveSession(payload);
   currentSession = payload;
 
   // Show QR panel
@@ -1175,17 +1365,17 @@ function downloadQRCode() {
 
 <script>
 /* ---- Dashboard: Recent Sessions ---- */
-function loadRecentSessions() {
+async function loadRecentSessions() {
   const list = document.getElementById('recent-sessions-list');
-  const sessions = storage.getAllSessions();
+  const sessions = await storage.getAllSessions();
   if (!sessions.length) {
     list.innerHTML = '<p class="text-sm text-gray-400">No sessions yet. Generate a QR code to start.</p>';
     return;
   }
   const now = Date.now();
-  list.innerHTML = sessions.slice(0,5).map(function(s) {
+  const cards = await Promise.all(sessions.slice(0,5).map(async function(s) {
     const active = s.expiresAt > now;
-    const count = storage.getRecords({ course: s.course }).filter(r => r.sessionId === s.sessionId).length;
+    const count = (await storage.getRecords({ course: s.course })).filter(r => r.sessionId === s.sessionId).length;
     const dateStr = new Date(s.createdAt).toLocaleDateString('en-US', { month:'short', day:'numeric' });
     const timeStr = new Date('2000-01-01T' + s.time).toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12:true });
     return `<div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
@@ -1195,7 +1385,8 @@ function loadRecentSessions() {
       </div>
       <span class="text-xs font-semibold ${active ? 'text-green-600 bg-green-50' : 'text-gray-400 bg-gray-50'} px-2 py-0.5 rounded-full">${active ? 'Active' : 'Ended'}</span>
     </div>`;
-  }).join('');
+  }));
+  list.innerHTML = cards.join('');
 }
 </script>
 
@@ -1346,8 +1537,8 @@ function showQRError(msg) {
   }
 }
 
-function checkActiveSessionButton() {
-  const session = storage.getActiveSession();
+async function checkActiveSessionButton() {
+  const session = await storage.getActiveSession();
   const btn = document.getElementById('use-active-session-btn');
   const label = document.getElementById('use-active-label');
   if (!btn || !label) return;
@@ -1391,90 +1582,162 @@ function proceedToStep2() {
   wireStep2Form();
 }
 
-/* ---- FACE-API.JS ---- */
-const FACE_CDNS = [
-  'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights',
-  'https://unpkg.com/face-api.js@0.22.2/weights'
-];
+/* ================================================================
+   FACE-API MODEL LOADER — direct ArrayBuffer approach
+   Reads manifest JSON, fetches each shard, calls loadFromArrayBuffer.
+   Tries ./weights/ first (local), then CDN fallback.
+   ================================================================ */
 
-async function tryNet(net, label, timeout = 12000) {
-  for (const cdn of FACE_CDNS) {
+const LOCAL_WEIGHTS = './weights';
+const CDN_WEIGHTS   = 'https://justadudewhohacks.github.io/face-api.js/models';
+
+/* ── Fetch a file, try local first then CDN ── */
+async function fetchWeight(filename, onProgress) {
+  const urls = [
+    LOCAL_WEIGHTS + '/' + filename,
+    CDN_WEIGHTS   + '/' + filename,
+    'https://unpkg.com/face-api.js@0.22.2/weights/' + filename
+  ];
+
+  for (const url of urls) {
     try {
-      const t = new Promise((_, r) => setTimeout(() => r(new Error('timeout')), timeout));
-      await Promise.race([net.loadFromUri(cdn), t]);
-      return true;
-    } catch(e) { /* try next */ }
+      const buf = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', url, true);
+        xhr.responseType = 'arraybuffer';
+        xhr.timeout = 15000;
+        xhr.onprogress = e => {
+          if (onProgress && e.lengthComputable) onProgress(e.loaded / e.total);
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300 && xhr.response.byteLength > 100) {
+            resolve(xhr.response);
+          } else {
+            reject(new Error('Bad response: ' + xhr.status + ' size:' + (xhr.response ? xhr.response.byteLength : 0)));
+          }
+        };
+        xhr.onerror   = () => reject(new Error('Network error: ' + url));
+        xhr.ontimeout = () => reject(new Error('Timeout: ' + url));
+        xhr.send();
+      });
+      if (onProgress) onProgress(1);
+      return buf;
+    } catch(e) {
+      console.warn('fetchWeight failed for ' + url + ':', e.message);
+    }
   }
-  return false;
+  throw new Error('All sources failed for: ' + filename);
 }
 
-// ── Attendance page face loading (detection-only indicator) ──
+/* ── Fetch manifest JSON ── */
+async function fetchManifest(filename) {
+  const buf = await fetchWeight(filename, null);
+  const text = new TextDecoder().decode(buf);
+  return JSON.parse(text);
+}
+
+/* ── Load a net directly from ArrayBuffer — bypasses face-api fetch entirely ── */
+async function loadNetDirect(net, manifestFile, onProgress) {
+  if (net.isLoaded) { if (onProgress) onProgress(100); return true; }
+
+  try {
+    if (onProgress) onProgress(10);
+    const localLoad = net.loadFromUri(LOCAL_WEIGHTS);
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Local model load timeout')), 20000)
+    );
+    await Promise.race([localLoad, timeout]);
+    if (onProgress) onProgress(100);
+    return true;
+  } catch(e) {
+    console.error('Local load failed for', manifestFile, ':', e.message);
+    try {
+      if (onProgress) onProgress(30);
+      const cdnLoad = net.loadFromUri(CDN_WEIGHTS);
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('CDN model load timeout')), 20000)
+      );
+      await Promise.race([cdnLoad, timeout]);
+      if (onProgress) onProgress(100);
+      return true;
+    } catch(e2) {
+      console.error('CDN load failed for', manifestFile, ':', e2.message);
+      return false;
+    }
+  }
+}
+
+/* ── Attendance page: load tinyFaceDetector only ── */
 async function loadFaceModels() {
   if (faceModelsLoaded) { hideFaceLoading(); return; }
-  setFaceLoadingStatus('loading', 'Loading face detection model...');
-  const ok = await tryNet(faceapi.nets.tinyFaceDetector, 'tinyFaceDetector', 12000);
-  if (ok) { faceModelsLoaded = true; hideFaceLoading(); }
-  else {
+  setFaceLoadingStatus('loading', 'Loading face detection model... 0%');
+
+  const ok = await loadNetDirect(
+    faceapi.nets.tinyFaceDetector,
+    'tiny_face_detector_model-weights_manifest.json',
+    pct => setFaceLoadingStatus('loading', 'Loading face model... ' + pct + '%')
+  );
+
+  if (ok) {
+    faceModelsLoaded = true;
+    hideFaceLoading();
+  } else {
     setFaceLoadingStatus('warn',
-      'Face model failed to load. Camera still works — face check disabled. ' +
-      '<button onclick="loadFaceModels()" class="underline font-medium ml-1">Retry</button>');
+      'Face model failed to load. ' +
+      '<button onclick="loadFaceModels()" style="text-decoration:underline;font-weight:600;cursor:pointer;background:none;border:none;padding:0;margin-left:4px;">Retry</button>');
   }
 }
 
-// ── Registration page face loading (all 3 models, with progress UI) ──
+/* ── Registration page: tinyFaceDetector + faceLandmark68Net ── */
 async function loadRegFaceModels() {
-  // If already loaded (shared state) — skip straight away
-  if (faceModelsLoaded && regFaceModelsLoaded) {
-    setRegModelStatus('done'); return;
-  }
+  if (faceModelsLoaded && regFaceModelsLoaded) { setRegModelStatus('done'); return; }
 
   const setDot = (id, state) => {
     const dot = document.getElementById('reg-dot-' + id);
     const lbl = document.getElementById('reg-' + id + '-status');
     if (!dot || !lbl) return;
-    const cls = { loading: 'bg-blue-400 animate-pulse', done: 'bg-green-500', fail: 'bg-red-400', wait: 'bg-gray-200' };
-    dot.className = 'w-3 h-3 rounded-full flex-shrink-0 ' + (cls[state] || cls.wait);
-    lbl.textContent = state === 'loading' ? 'loading...' : state === 'done' ? '✓ ready' : state === 'fail' ? '✗ failed' : 'waiting';
-    lbl.className = 'ml-auto text-xs ' + (state === 'done' ? 'text-green-600 font-medium' : state === 'fail' ? 'text-red-500' : 'text-gray-400');
+    const cls = { loading:'bg-blue-400 animate-pulse', done:'bg-green-500', fail:'bg-red-400', wait:'bg-gray-200' };
+    dot.className = 'w-2.5 h-2.5 rounded-full flex-shrink-0 transition-all ' + (cls[state] || cls.wait);
+    const txt = { loading:'downloading...', done:'✓ ready', fail:'✗ failed', wait:'waiting' };
+    lbl.textContent = txt[state] || state;
+    lbl.className = 'ml-auto text-xs ' + (state==='done'?'text-green-600 font-medium':state==='fail'?'text-red-500':'text-gray-400');
+  };
+  const setBar = pct => {
+    const b = document.getElementById('reg-model-bar');
+    const p = document.getElementById('reg-model-pct');
+    if (b) b.style.width = Math.min(pct,100)+'%';
+    if (p) p.textContent = Math.min(pct,100)+'%';
   };
 
-  const setBar = (pct) => {
-    const bar = document.getElementById('reg-model-bar');
-    const pctEl = document.getElementById('reg-model-pct');
-    if (bar) bar.style.width = pct + '%';
-    if (pctEl) pctEl.textContent = pct + '%';
-  };
+  setBar(0); setDot('tiny','wait'); setDot('lm','wait'); setDot('rec','wait');
 
-  setBar(0);
-  setDot('tiny', 'wait'); setDot('lm', 'wait'); setDot('rec', 'wait');
-
-  // Model 1 — tinyFaceDetector (~190KB, fast)
+  // Model 1: tinyFaceDetector
   if (!faceapi.nets.tinyFaceDetector.isLoaded) {
-    setDot('tiny', 'loading'); setBar(5);
-    const ok = await tryNet(faceapi.nets.tinyFaceDetector, 'tiny', 12000);
+    setDot('tiny','loading');
+    const ok = await loadNetDirect(
+      faceapi.nets.tinyFaceDetector,
+      'tiny_face_detector_model-weights_manifest.json',
+      pct => setBar(Math.round(pct * 0.5))
+    );
     setDot('tiny', ok ? 'done' : 'fail');
-    if (!ok) { setRegModelStatus('fail', 'Face detector failed — check internet connection.'); return; }
-  } else { setDot('tiny', 'done'); }
-  setBar(30);
+    if (!ok) { setRegModelStatus('fail', 'Face detector failed. Check your weights folder has all files, then retry.'); return; }
+  } else { setDot('tiny','done'); }
+  setBar(50);
 
-  // Model 2 — faceLandmark68Net (~350KB, medium)
+  // Model 2: faceLandmark68Net
   if (!faceapi.nets.faceLandmark68Net.isLoaded) {
-    setDot('lm', 'loading'); setBar(35);
-    const ok = await tryNet(faceapi.nets.faceLandmark68Net, 'lm', 15000);
+    setDot('lm','loading');
+    const ok = await loadNetDirect(
+      faceapi.nets.faceLandmark68Net,
+      'face_landmark_68_model-weights_manifest.json',
+      pct => setBar(50 + Math.round(pct * 0.5))
+    );
     setDot('lm', ok ? 'done' : 'fail');
-    if (!ok) { setRegModelStatus('fail', 'Landmark model failed — check internet connection.'); return; }
-  } else { setDot('lm', 'done'); }
-  setBar(60);
-
-  // Model 3 — faceRecognitionNet (~6.2MB, heaviest)
-  if (!faceapi.nets.faceRecognitionNet.isLoaded) {
-    setDot('rec', 'loading'); setBar(65);
-    const ok = await tryNet(faceapi.nets.faceRecognitionNet, 'rec', 30000);
-    setDot('rec', ok ? 'done' : 'fail');
-    if (!ok) { setRegModelStatus('fail', 'Recognition model failed. This is the largest model (~6MB) — try on a faster connection.'); return; }
-  } else { setDot('rec', 'done'); }
+    if (!ok) { setRegModelStatus('fail', 'Landmark model failed. Check your weights folder, then retry.'); return; }
+  } else { setDot('lm','done'); }
   setBar(100);
 
+  setDot('rec','done'); // recognition loaded lazily at attendance
   faceModelsLoaded = true;
   regFaceModelsLoaded = true;
   setRegModelStatus('done');
@@ -1486,36 +1749,19 @@ function setRegModelStatus(state, msg) {
   if (state === 'done') {
     el.className = 'rounded-xl border border-green-200 bg-green-50 px-4 py-3 mb-4 text-sm';
     el.innerHTML = '<div class="flex items-center gap-2 text-green-700 font-semibold">'
-      + '<i class="ri-checkbox-circle-fill text-green-500"></i> All face models loaded — camera ready</div>';
-  } else if (state === 'fail') {
+      + '<i class="ri-checkbox-circle-fill text-green-500"></i>'
+      + ' Models ready — open camera to take your photo</div>';
+  } else {
     el.className = 'rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-4 text-sm';
     el.innerHTML = '<div class="flex items-start gap-2 text-red-700">'
       + '<i class="ri-error-warning-line text-red-500 flex-shrink-0 mt-0.5"></i>'
-      + '<div><p class="font-medium">Model load failed</p>'
+      + '<div><p class="font-semibold">Model load failed</p>'
       + '<p class="text-xs mt-1 text-red-600">' + (msg||'') + '</p>'
-      + '<button onclick="loadRegFaceModels()" class="mt-2 text-xs underline font-medium text-red-700">Retry</button></div></div>';
+      + '<button onclick="loadRegFaceModels()" class="mt-2 text-xs bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded font-semibold cursor-pointer">Retry</button>'
+      + '</div></div>';
   }
 }
 
-function hideFaceLoading() {
-  const el = document.getElementById('face-loading');
-  if (el) el.classList.add('hidden');
-}
-
-function setFaceLoadingStatus(type, msg) {
-  const el = document.getElementById('face-loading');
-  if (!el) return;
-  el.classList.remove('hidden');
-  if (type === 'loading') {
-    el.className = 'bg-blue-50 border border-blue-100 rounded-lg px-4 py-3 mb-3 flex items-center gap-3';
-    el.innerHTML = '<div class="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin flex-shrink-0"></div>'
-      + '<span class="text-sm text-blue-700">' + msg + '</span>';
-  } else if (type === 'warn') {
-    el.className = 'bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-3 mb-3 flex items-start gap-3';
-    el.innerHTML = '<i class="ri-alert-line text-yellow-500 flex-shrink-0 mt-0.5"></i>'
-      + '<span class="text-sm text-yellow-700">' + msg + '</span>';
-  }
-}
 
 /* ---- CAMERA + FACE DETECTION ---- */
 function wireStep2Form() {
@@ -1548,6 +1794,12 @@ function wireStep2Form() {
   };
 
   captureBtn.onclick = async function() {
+    const matric = document.getElementById('matric-number').value.trim();
+    if (!matric) {
+      showAttendanceMsg('Enter your matric number before taking photo.', 'error');
+      return;
+    }
+
     if (!faceDetected && faceModelsLoaded) {
       showAttendanceMsg('No face detected. Please face the camera clearly.', 'error');
       return;
@@ -1568,7 +1820,6 @@ function wireStep2Form() {
     retakeBtn.classList.remove('hidden');
     document.getElementById('face-badge').classList.add('hidden');
 
-    const matric = document.getElementById('matric-number').value.trim();
     await runFaceMatch(canvas, matric);
   };
 
@@ -1706,13 +1957,22 @@ let faceMatchPassed = false;
 const MATCH_THRESHOLD = 0.52;
 
 async function runFaceMatch(canvas, matric) {
+  const safeMatric = (matric || '').trim();
+  if (!safeMatric) {
+    faceMatchPassed = false;
+    setCamStatus('off', 'Matric Required');
+    showFaceResult(false, 'Enter your matric number before face verification.');
+    validateStep2Submit();
+    return;
+  }
+
   showFaceResult(null, '<span class="flex items-center gap-2"><span class="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin inline-block"></span> Verifying identity...</span>');
   setCamStatus('matching', 'Verifying...');
 
   try {
-    // No enrolled descriptor — allow through as unverified
-    const enrolled = storage.getFaceDescriptor(matric);
-    if (!enrolled) {
+    // No enrolled face image — allow through unverified
+    const enrolledImageUrl = await storage.getFaceImageUrl(safeMatric);
+    if (!enrolledImageUrl) {
       faceMatchPassed = false;
       setCamStatus('captured', 'Photo Captured');
       showFaceResult(false,
@@ -1721,45 +1981,74 @@ async function runFaceMatch(canvas, matric) {
       validateStep2Submit(); return;
     }
 
-    if (!faceModelsLoaded) {
+    // Load recognition model now (lazy — only when matching is needed)
+    showFaceResult(null, '<span class="flex items-center gap-2"><span class="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin inline-block"></span> Loading recognition model (one-time, ~10s)...</span>');
+    if (!faceapi.nets.faceRecognitionNet.isLoaded) {
+      const ok = await loadNetDirect(faceapi.nets.faceRecognitionNet, 'face_recognition_model-weights_manifest.json', null);
+      if (!ok) {
+        faceMatchPassed = false;
+        setCamStatus('captured', 'Photo Captured');
+        showFaceResult(false, 'Recognition model failed to load. Proceeding unverified — attendance still recorded.');
+        validateStep2Submit(); return;
+      }
+    }
+
+    showFaceResult(null, '<span class="flex items-center gap-2"><span class="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin inline-block"></span> Comparing faces...</span>');
+
+    // Load enrolled image into an HTMLImageElement for face-api
+    const enrolledImg = await new Promise((res, rej) => {
+      const img = new Image();
+      img.onload = () => res(img);
+      img.onerror = () => rej(new Error('Could not load enrolled image'));
+      img.src = enrolledImageUrl;
+    });
+
+    // Extract descriptor from enrolled image
+    const enrolledDet = await faceapi
+      .detectSingleFace(enrolledImg, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 }))
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
+    if (!enrolledDet) {
       faceMatchPassed = false;
       setCamStatus('captured', 'Photo Captured');
-      showFaceResult(false, 'Face models not ready — proceeding unverified.');
+      showFaceResult(false, 'Could not read enrolled face image. Please re-register.');
       validateStep2Submit(); return;
     }
 
-    // Full recognition pipeline
-    const det = await faceapi
+    // Extract descriptor from live selfie
+    const liveDet = await faceapi
       .detectSingleFace(canvas, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
       .withFaceLandmarks()
       .withFaceDescriptor();
 
-    if (!det) {
+    if (!liveDet) {
       faceMatchPassed = false;
       setCamStatus('off', 'No Face');
-      showFaceResult(false, 'Could not extract face features. Retake in better lighting.');
+      showFaceResult(false, 'Could not extract face from selfie. Retake in better lighting.');
       capturedImageData = null;
       validateStep2Submit(); return;
     }
 
-    const dist = faceapi.euclideanDistance(det.descriptor, enrolled);
+    // Compare descriptors
+    const dist = faceapi.euclideanDistance(liveDet.descriptor, enrolledDet.descriptor);
     const matched = dist < MATCH_THRESHOLD;
     const conf = Math.round(Math.max(0, (1 - dist / MATCH_THRESHOLD)) * 100);
     faceMatchPassed = matched;
 
     if (matched) {
-      const st = storage.getStudent(matric);
+      const st = await storage.getStudent(safeMatric);
       setCamStatus('captured', 'Identity Verified');
-      showFaceResult(true, 'Identity verified — ' + (st ? st.fullName : matric) + ' (' + conf + '% confidence)');
+      showFaceResult(true, 'Identity verified — ' + (st ? st.fullName : safeMatric) + ' (' + conf + '% confidence)');
     } else {
       setCamStatus('off', 'Match Failed');
-      showFaceResult(false, 'Face does not match enrolled photo. Please retake or check matric number.');
+      showFaceResult(false, 'Face does not match enrolled photo (distance: ' + dist.toFixed(3) + '). Please retake or check your matric number.');
       capturedImageData = null;
     }
   } catch(err) {
     faceMatchPassed = false;
     setCamStatus('captured', 'Photo Captured');
-    showFaceResult(false, 'Verification error — proceeding unverified.');
+    showFaceResult(false, 'Verification error — proceeding unverified. (' + err.message + ')');
   }
   validateStep2Submit();
 }
@@ -1774,21 +2063,31 @@ function validateStep2Submit() {
 }
 
 /* ---- SUBMIT ATTENDANCE ---- */
-function submitAttendance() {
+async function submitAttendance() {
   const matricInput = document.getElementById('matric-number');
   const msgEl = document.getElementById('attendance-message');
   if (!verifiedSession) { showAttendanceMsg('No session verified. Please scan the QR code.', 'error'); return; }
   const matric = matricInput ? matricInput.value.trim() : '';
   if (!matric || matric.length < 4) { showAttendanceMsg('Please enter a valid matric number.', 'error'); return; }
   if (!capturedImageData) { showAttendanceMsg('Please capture your photo.', 'error'); return; }
-  if (storage.hasDuplicate(matric, verifiedSession.sessionId)) {
+  if (await storage.hasDuplicate(matric, verifiedSession.sessionId)) {
     showAttendanceMsg('Your attendance for this session is already recorded.', 'error');
     return;
   }
 
-  const student = storage.getStudent(matric);
+  const hasEnrolledFace = await storage.isEnrolled(matric);
+  if (hasEnrolledFace && !faceMatchPassed) {
+    showAttendanceMsg('Face verification failed. Retake your photo until identity is verified.', 'error');
+    return;
+  }
+  if (!hasEnrolledFace) {
+    showAttendanceMsg('No enrolled face found for this matric number. Register your face first.', 'error');
+    return;
+  }
+
+  const student = await storage.getStudent(matric);
   const now = new Date();
-  storage.addAttendance({
+  await storage.addAttendance({
     id: 'att_' + Date.now(),
     sessionId: verifiedSession.sessionId,
     course: verifiedSession.course,
@@ -1800,7 +2099,7 @@ function submitAttendance() {
     status: 'Present',
     ipAddress: simIP,
     deviceFingerprint: fingerprint,
-    faceVerified: faceMatchPassed || faceDetected,
+    faceVerified: faceMatchPassed,
     qrVerified: true
   });
 
@@ -1833,11 +2132,11 @@ window.addEventListener('beforeunload', function() { stopCamera(); stopQRScanner
 
 <script>
 /* ---- View Attendance Table ---- */
-function loadAttendanceTable() {
+async function loadAttendanceTable() {
   const course = document.getElementById('filter-course').value;
   const from = document.getElementById('filter-from').value;
   const to = document.getElementById('filter-to').value;
-  const records = storage.getRecords({ course, from, to });
+  const records = await storage.getRecords({ course, from, to });
   const tbody = document.getElementById('attendance-table-body');
   const count = document.getElementById('attendance-count');
 
@@ -1864,8 +2163,8 @@ function loadAttendanceTable() {
   count.textContent = records.length + ' record' + (records.length !== 1 ? 's' : '');
 }
 
-function exportExcel() {
-  const records = storage.getRecords();
+async function exportExcel() {
+  const records = await storage.getRecords();
   if (!records.length) { alert('No attendance records to export.'); return; }
 
   // Build worksheet data
@@ -1936,8 +2235,8 @@ function exportExcel() {
   XLSX.writeFile(wb, 'attendance-' + new Date().toISOString().split('T')[0] + '.xlsx');
 }
 
-function exportPDF() {
-  const records = storage.getRecords();
+async function exportPDF() {
+  const records = await storage.getRecords();
   if (!records.length) { alert('No attendance records to export.'); return; }
 
   const { jsPDF } = window.jspdf;
@@ -2093,7 +2392,7 @@ function resetRegPage() {
   stopRegCamera();
   regDescriptor = null;
   regFaceDetected = false;
-  const els = ['reg-step-face','reg-success-banner','reg-processing','reg-result','reg-cam-controls','reg-face-badge'];
+  const els = ['reg-step-face','reg-success-banner','reg-processing','reg-result','reg-cam-controls','reg-face-badge','reg-save-btn'];
   els.forEach(id => { const e = document.getElementById(id); if (e) e.classList.add('hidden'); });
   document.getElementById('reg-step-details').classList.remove('hidden');
   const vid = document.getElementById('reg-video');
@@ -2110,7 +2409,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const nextBtn = document.getElementById('reg-next-btn');
   if (!nextBtn) return;
 
-  nextBtn.addEventListener('click', function() {
+  nextBtn.addEventListener('click', async function() {
     const name  = (document.getElementById('reg-fullname').value || '').trim();
     const matric = (document.getElementById('reg-matric').value || '').trim();
     const dept  = (document.getElementById('reg-dept').value || '').trim();
@@ -2123,7 +2422,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!dept)   { showErr('Please enter your department.'); return; }
 
     // Save basic profile
-    storage.registerStudent({ matricNumber: matric, fullName: name, department: dept });
+    await storage.registerStudent({ matricNumber: matric, fullName: name, department: dept });
 
     // Show face step
     document.getElementById('reg-chip-name').textContent = name;
@@ -2183,28 +2482,39 @@ function wireRegCamera(matric, name) {
       if (procEl) procEl.classList.remove('hidden');
 
       try {
-        if (!regFaceModelsLoaded) throw new Error('Face models not loaded yet — wait for progress bar to complete.');
+        if (!regFaceModelsLoaded) throw new Error('Face models not ready — wait for the progress bar to complete.');
 
+        // Confirm face is detectable (uses landmark model, already loaded)
         const det = await faceapi
           .detectSingleFace(cvs, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.4 }))
-          .withFaceLandmarks()
-          .withFaceDescriptor();
+          .withFaceLandmarks();
 
         if (procEl) procEl.classList.add('hidden');
 
         if (!det) {
-          showRegResult(false, 'No face features extracted. Retake in better lighting.');
+          showRegResult(false, 'No face detected in the captured photo. Retake in better lighting, face the camera directly.');
           resetCamForRetake();
           return;
         }
 
-        regDescriptor = det.descriptor;
-        showRegResult(true, 'Face descriptor extracted (' + det.descriptor.length + ' features). Click Save to complete registration.');
+        // Store the face IMAGE (base64) — descriptor computed at attendance time
+        // This avoids loading the heavy recognition model during registration
+        regDescriptor = cvs.toDataURL('image/jpeg', 0.9); // store image, not descriptor
+
+        // Show photo thumbnail in the chip
+        const preview = document.getElementById('reg-photo-preview');
+        const placeholder = document.getElementById('reg-photo-placeholder');
+        const chipStatus = document.getElementById('reg-chip-status');
+        if (preview) { preview.src = regDescriptor; preview.classList.remove('hidden'); }
+        if (placeholder) placeholder.classList.add('hidden');
+        if (chipStatus) { chipStatus.textContent = '✓ Photo taken'; chipStatus.className = 'text-xs text-green-600 font-medium mt-0.5'; }
+
+        showRegResult(true, 'Photo captured — face confirmed in frame. Click "Save to Student Profile" to finish.');
         if (saveBtn) saveBtn.classList.remove('hidden');
 
       } catch(err) {
         if (procEl) procEl.classList.add('hidden');
-        showRegResult(false, err.message);
+        showRegResult(false, 'Error: ' + err.message);
         resetCamForRetake();
       }
     };
@@ -2221,9 +2531,9 @@ function wireRegCamera(matric, name) {
   }
 
   if (saveBtn) {
-    saveBtn.onclick = function() {
+    saveBtn.onclick = async function() {
       if (!regDescriptor) { alert('No face captured yet.'); return; }
-      const saved = storage.saveFaceDescriptor(matric, regDescriptor);
+      const saved = await storage.saveFaceDescriptor(matric, regDescriptor);
       if (!saved) { alert('Could not save — matric number not found in system.'); return; }
 
       // Show success
